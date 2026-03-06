@@ -2,6 +2,7 @@
 
 import { stripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
+import { getURL } from "@/lib/utils";
 
 export interface CheckoutResult {
   url?: string;
@@ -45,7 +46,8 @@ export async function createCheckoutSession(
     duration: number;
   };
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
+  // Resolve the base URL for this deployment environment
+  const baseUrl = getURL();
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -58,7 +60,7 @@ export async function createCheckoutSession(
           product_data: {
             name: service.name,
             description: `${service.duration}-minute treatment at Bella MediSpa · Dover, DE`,
-            images: [`${appUrl}/bella.jpg`],
+            images: [`${baseUrl}/bella.jpg`],
           },
         },
         quantity: 1,
@@ -67,8 +69,8 @@ export async function createCheckoutSession(
     metadata: {
       booking_id: bookingId,
     },
-    success_url: `${appUrl}/book/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url:  `${appUrl}/book/cancel?booking_id=${bookingId}`,
+    success_url: `${baseUrl}/book/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url:  `${baseUrl}/book/cancel?booking_id=${bookingId}`,
   });
 
   return { url: session.url! };

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getURL } from "@/lib/utils";
 
 export interface AuthState {
   error?: string;
@@ -38,7 +39,7 @@ export async function signUp(
     password,
     options: {
       data: { full_name },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      emailRedirectTo: `${getURL()}/auth/callback`,
     },
   });
 
