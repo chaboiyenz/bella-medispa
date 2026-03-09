@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ServiceCard } from "@/components/ServiceCard";
 import { ContactSection } from "@/components/ContactSection";
 
 export const metadata: Metadata = {
@@ -96,17 +95,18 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right: Floating image */}
-          <div className="relative flex justify-center">
-            <div className="relative w-full max-w-md aspect-square rounded-3xl overflow-hidden shadow-2xl shadow-[#17a2b8]/10 ring-1 ring-white/40">
+          {/* Right: Floating image — temporary luxury spa placeholder (1200×800) */}
+          <div className="relative flex justify-center" suppressHydrationWarning>
+            <div className="relative w-full max-w-md aspect-square rounded-3xl overflow-hidden bg-white shadow-2xl shadow-slate-300/50 ring-1 ring-white/40" suppressHydrationWarning>
               <Image
-                src="/bella-.png"
-                alt="Bella MediSpa treatment"
+                src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1200&h=800&fit=crop"
+                alt="Luxury spa interior — Bella MediSpa"
                 fill
                 className="object-cover"
-                priority
+                priority  
+                unoptimized
               />
-              <div className="absolute inset-0 bg-[#17a2b8]/10 mix-blend-multiply" />
+              <div className="absolute inset-0 bg-[#17a2b8]/5 mix-blend-multiply pointer-events-none" aria-hidden />
             </div>
             {/* Cyan ambient glow */}
             <div className="absolute -bottom-8 -right-8 w-72 h-72 rounded-full bg-[#17a2b8]/15 blur-3xl -z-10" />
@@ -170,14 +170,77 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SERVICES ────────────────────────────────────────────── */}
-      <section id="services" className="py-24 px-6">
+      {/* ── CLINICAL BOUTIQUE (placeholder gallery) ───────────────── */}
+      <section id="clinical-boutique" className="py-24 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-6 mb-12">
+            <span className="w-8 h-px bg-slate-200" />
+            <p className="text-[9px] tracking-[0.45em] font-bold text-[#94A3B8] uppercase">
+              CLINICAL BOUTIQUE
+            </p>
+          </div>
+          <h2 className="font-serif text-4xl md:text-5xl font-light text-[#0F172A] mb-14">
+            Treatments <span className="text-[#ef3825] italic">by Category</span>
+          </h2>
+
+          {/* Asymmetrical gallery — staggered heights, generous white space */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10" suppressHydrationWarning>
+            {/* Facials — taller */}
+            <div className="flex flex-col gap-4" suppressHydrationWarning>
+              <div className="relative rounded-2xl overflow-hidden bg-white shadow-2xl shadow-slate-300/40 h-[400px]" suppressHydrationWarning>
+                <Image
+                  src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600&h=400&fit=crop"
+                  alt="Facials — luxury facial treatment"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-[#17a2b8]/5 mix-blend-multiply pointer-events-none" aria-hidden />
+              </div>
+              <p className="text-lg font-semibold text-[#0F172A] tracking-tight">Facials</p>
+            </div>
+
+            {/* Injectables — medium */}
+            <div className="flex flex-col gap-4 md:pt-16" suppressHydrationWarning>
+              <div className="relative rounded-2xl overflow-hidden bg-white shadow-2xl shadow-slate-300/40 h-[320px]" suppressHydrationWarning>
+                <Image
+                  src="https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=600&h=400&fit=crop"
+                  alt="Injectables — aesthetic injectable treatment"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-[#17a2b8]/5 mix-blend-multiply pointer-events-none" aria-hidden />
+              </div>
+              <p className="text-lg font-semibold text-[#0F172A] tracking-tight">Injectables</p>
+            </div>
+
+            {/* EMSELLA® — taller */}
+            <div className="flex flex-col gap-4 md:pt-8" suppressHydrationWarning>
+              <div className="relative rounded-2xl overflow-hidden bg-white shadow-2xl shadow-slate-300/40 h-[380px]" suppressHydrationWarning>
+                <Image
+                  src="https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=600&h=400&fit=crop"
+                  alt="EMSELLA® — body contouring treatment"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-[#17a2b8]/5 mix-blend-multiply pointer-events-none" aria-hidden />
+              </div>
+              <p className="text-lg font-semibold text-[#0F172A] tracking-tight">EMSELLA®</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SERVICES: Curated for You (Boutique Exhibit) ─────────── */}
+      <section id="services" className="py-24 px-6 bg-[#F8FAFC]">
         <div className="max-w-7xl mx-auto">
 
-          {/* Archival section header */}
-          <div className="flex items-center gap-6 mb-14">
-            <div className="flex-1">
-              <div className="flex items-center gap-4 mb-3">
+          {/* Archival section header — shielded for extension scanning */}
+          <div className="flex items-center gap-6 mb-14" suppressHydrationWarning>
+            <div className="flex-1" suppressHydrationWarning>
+              <div className="flex items-center gap-4 mb-3" suppressHydrationWarning>
                 <span className="w-8 h-px bg-slate-200" />
                 <p className="text-[9px] tracking-[0.45em] font-bold text-[#94A3B8] uppercase">
                   CURATED TREATMENTS · DOVER, DE
@@ -195,11 +258,43 @@ export default function HomePage() {
             </Button>
           </div>
 
-          {/* Exhibit grid — white panels on paper field */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" suppressHydrationWarning>
-            {SERVICES.map((service) => (
-              <ServiceCard key={service.title} {...service} />
-            ))}
+          {/* 3-column Boutique Exhibit grid — medical-grade 800×1000 placeholders, white panels, shadow-2xl */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8" suppressHydrationWarning>
+            {SERVICES.map((service, i) => {
+              const placeholders = [
+                "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&h=1000&fit=crop",
+                "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=800&h=1000&fit=crop",
+                "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&h=1000&fit=crop",
+              ];
+              return (
+                <div key={service.title} className="flex flex-col" suppressHydrationWarning>
+                  <div className="rounded-2xl overflow-hidden bg-white shadow-2xl shadow-slate-300/40 flex flex-col" suppressHydrationWarning>
+                    <div className="relative aspect-[800/1000] w-full" suppressHydrationWarning>
+                      <Image
+                        src={placeholders[i] ?? placeholders[0]}
+                        alt={service.imageAlt}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                      <div className="absolute inset-0 bg-[#17a2b8]/5 mix-blend-multiply pointer-events-none" aria-hidden />
+                    </div>
+                    <div className="p-6 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold tracking-widest uppercase text-[#64748B]">{service.duration}</span>
+                        <span className="bg-[#17a2b8]/10 text-[#17a2b8] text-xs font-bold px-3 py-1 rounded-full">From {service.price}</span>
+                      </div>
+                      <h3 className="font-serif text-xl font-semibold text-[#0F172A] leading-snug">{service.title}</h3>
+                      <p className="text-sm text-[#64748B] leading-relaxed line-clamp-2">{service.description}</p>
+                      <Button asChild className="mt-2 w-full bg-[#ef3825] hover:bg-[#17a2b8] text-white font-semibold rounded-xl shadow-sm">
+                        <a href="/book">Book Now</a>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

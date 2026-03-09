@@ -78,25 +78,26 @@ const NAV_LINK =
 
 // ── Skeleton — matches left-aligned layout ────────────────────────────────
 
+// Wide-spectrum hydration shield: Bitwarden and other extensions inject attributes (e.g. bis_skin_checked) into metadata wrappers and skeleton loaders
 function NavbarSkeleton() {
   return (
     <header
-      suppressHydrationWarning
+      suppressHydrationWarning={true}
       className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-sm"
     >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center gap-6">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center gap-6" suppressHydrationWarning={true}>
         {/* Logo */}
-        <div className="w-10 h-10 rounded-full bg-slate-200 animate-pulse shrink-0" />
+        <div className="w-10 h-10 rounded-full bg-slate-200 animate-pulse shrink-0" suppressHydrationWarning={true} />
         {/* Nav links */}
-        <div className="hidden lg:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3" suppressHydrationWarning={true}>
           {[56, 80, 64, 60, 40, 56].map((w, i) => (
-            <div key={i} className="h-3 rounded-full bg-slate-200/70 animate-pulse" style={{ width: w }} />
+            <div key={i} className="h-3 rounded-full bg-slate-200/70 animate-pulse" style={{ width: w }} suppressHydrationWarning={true} />
           ))}
         </div>
         {/* CTAs */}
-        <div className="flex items-center gap-2 ml-auto">
-          <div className="w-8 h-8 rounded-full bg-slate-200/70 animate-pulse" />
-          <div className="w-24 h-9 rounded-full bg-[#ef3825]/25 animate-pulse" />
+        <div className="flex items-center gap-2 ml-auto" suppressHydrationWarning={true}>
+          <div className="w-8 h-8 rounded-full bg-slate-200/70 animate-pulse" suppressHydrationWarning={true} />
+          <div className="w-24 h-9 rounded-full bg-[#ef3825]/25 animate-pulse" suppressHydrationWarning={true} />
         </div>
       </div>
     </header>
@@ -345,14 +346,14 @@ function MobileNav() {
         </button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-[300px] bg-white p-0 border-r border-slate-200">
+      <SheetContent side="left" className="w-[300px] bg-white p-0 border-r border-slate-200" suppressHydrationWarning>
 
-        <SheetHeader className="sr-only">
+        <SheetHeader className="sr-only" suppressHydrationWarning>
           <SheetTitle>Navigation Menu</SheetTitle>
         </SheetHeader>
 
-        {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100">
+        {/* Header — bis_skin_checked often injected on container nodes */}
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100" suppressHydrationWarning>
           <Image src="/bella-icon.png" alt="Bella MediSpa" width={32} height={32} className="h-8 w-auto object-contain" />
           <span className="font-serif text-base font-semibold text-[#0F172A]">
             Bella <span className="text-[#ef3825]">MediSpa</span>
@@ -360,9 +361,9 @@ function MobileNav() {
         </div>
 
         {/* Scrollable nav */}
-        <nav className="overflow-y-auto h-[calc(100vh-140px)] px-4 py-3 flex flex-col gap-0.5">
+        <nav className="overflow-y-auto h-[calc(100vh-140px)] px-4 py-3 flex flex-col gap-0.5" suppressHydrationWarning>
 
-          <Link href="/team" onClick={close} className="px-3 py-2.5 text-sm font-medium text-[#0F172A] hover:text-[#17a2b8] hover:bg-[#F8FAFC] rounded-xl transition-colors">
+          <Link href="/team" onClick={close} className="px-3 py-2.5 text-sm font-medium text-[#0F172A] hover:text-[#17a2b8] hover:bg-[#F8FAFC] rounded-xl transition-colors" suppressHydrationWarning>
             Team
           </Link>
 
@@ -418,24 +419,24 @@ function MobileNav() {
           </Accordion>
 
           {/* EMSELLA® — #ef3825 clinical priority */}
-          <Link href="/esmella" onClick={close} className="px-3 py-2.5 text-sm font-bold text-[#ef3825] hover:text-[#17a2b8] hover:bg-[#F8FAFC] rounded-xl transition-colors">
+          <Link href="/esmella" onClick={close} className="px-3 py-2.5 text-sm font-bold text-[#ef3825] hover:text-[#17a2b8] hover:bg-[#F8FAFC] rounded-xl transition-colors" suppressHydrationWarning>
             EMSELLA®
           </Link>
 
-          <Link href="/shop" onClick={close} className="px-3 py-2.5 text-sm font-medium text-[#0F172A] hover:text-[#17a2b8] hover:bg-[#F8FAFC] rounded-xl transition-colors">
+          <Link href="/shop" onClick={close} className="px-3 py-2.5 text-sm font-medium text-[#0F172A] hover:text-[#17a2b8] hover:bg-[#F8FAFC] rounded-xl transition-colors" suppressHydrationWarning>
             Boutique
           </Link>
 
-          <Link href="/#contact" onClick={close} className="px-3 py-2.5 text-sm font-medium text-[#64748B] hover:text-[#17a2b8] hover:bg-[#F8FAFC] rounded-xl transition-colors">
+          <Link href="/#contact" onClick={close} className="px-3 py-2.5 text-sm font-medium text-[#64748B] hover:text-[#17a2b8] hover:bg-[#F8FAFC] rounded-xl transition-colors" suppressHydrationWarning>
             Contact
           </Link>
 
         </nav>
 
         {/* Pinned CTA */}
-        <div className="absolute bottom-0 left-0 right-0 px-5 py-4 border-t border-slate-200 bg-white">
+        <div className="absolute bottom-0 left-0 right-0 px-5 py-4 border-t border-slate-200 bg-white" suppressHydrationWarning>
           <Button asChild className="w-full bg-[#ef3825] hover:bg-[#17a2b8] text-white font-semibold transition-colors duration-300 rounded-full">
-            <Link href="/book" onClick={close}>Book Now</Link>
+            <Link href="/book" onClick={close} suppressHydrationWarning>Book Now</Link>
           </Button>
         </div>
 
@@ -457,13 +458,12 @@ export function Navbar() {
   if (!mounted) return <NavbarSkeleton />;
 
   return (
-    // suppressHydrationWarning: browser extensions (Grammarly, etc.) inject
-    // attributes on <header> that cause false hydration mismatches.
+    // suppressHydrationWarning: extensions (e.g. Bitdefender) inject bis_skin_checked on header/nav nodes
     <header
       suppressHydrationWarning
       className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-sm animate-in fade-in duration-300"
     >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center gap-4">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center gap-4" suppressHydrationWarning>
 
         {/* ── Mobile hamburger (lg:hidden) ── */}
         <MobileNav />
@@ -473,6 +473,7 @@ export function Navbar() {
           href="/"
           aria-label="Bella MediSpa — home"
           className="shrink-0"
+          suppressHydrationWarning
         >
           <Image
             src="/bella-icon.png"
@@ -485,19 +486,19 @@ export function Navbar() {
         </Link>
 
         {/* ── Nav links — left-center, immediately after logo ── */}
-        <div className="hidden lg:flex items-center">
+        <div className="hidden lg:flex items-center" suppressHydrationWarning>
           <LeftNav />
           <RightNav />
         </div>
 
         {/* ── CTAs — pushed to far right ── */}
-        <div className="flex items-center gap-1.5 ml-auto">
+        <div className="flex items-center gap-1.5 ml-auto" suppressHydrationWarning>
           <AdminBadge />
           <Button
             asChild
             className="hidden md:inline-flex bg-[#ef3825] hover:bg-[#17a2b8] text-white font-semibold transition-colors duration-300 rounded-full px-5 text-sm shadow-sm shadow-[#ef3825]/30 hover:shadow-[#17a2b8]/30"
           >
-            <Link href="/book">Book Now</Link>
+            <Link href="/book" suppressHydrationWarning>Book Now</Link>
           </Button>
         </div>
 

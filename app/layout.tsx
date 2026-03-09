@@ -52,10 +52,13 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${playfair.variable} ${inter.className}`} suppressHydrationWarning={true}>
-        <AdminModeProvider isAdmin={isAdmin}>
-          <Navbar />
-          <GlobalShell>{children}</GlobalShell>
-        </AdminModeProvider>
+        {/* Wide-spectrum shield: ignore extension-injected attributes (e.g. bis_skin_checked) on metadata/content wrappers */}
+        <div suppressHydrationWarning={true}>
+          <AdminModeProvider isAdmin={isAdmin}>
+            <Navbar />
+            <GlobalShell>{children}</GlobalShell>
+          </AdminModeProvider>
+        </div>
       </body>
     </html>
   );

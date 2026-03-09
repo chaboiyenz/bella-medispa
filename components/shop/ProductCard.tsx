@@ -166,8 +166,6 @@ export function ProductCard({
   const [editOpen, setEditOpen]       = useState(false);
   const [deleting, setDeleting]       = useState(false);
 
-  const catalogNum  = String(index + 1).padStart(3, "0");
-  const categoryTag = product.category?.toUpperCase() ?? "GENERAL";
 
   async function handleDelete() {
     if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
@@ -180,35 +178,35 @@ export function ProductCard({
     }
   }
 
+  const categoryLabel = (product.category ?? "GENERAL").toUpperCase().replace(/\s+/g, " / ");
+
   return (
     <>
-      {/* ── Exhibit panel ── */}
+      {/* ── Boutique exhibit card: white panel, large image, Cyan tag, Navy Playfair title, Clinical Details CTA ── */}
       <div
-        className="group relative bg-[#FAFAFA] flex flex-col transition-shadow duration-500 hover:shadow-[0_8px_48px_rgba(0,0,0,0.08)] hover:z-10"
+        className="group relative flex flex-col rounded-2xl overflow-hidden bg-white shadow-2xl shadow-slate-300/40 transition-shadow duration-500 hover:shadow-[0_20px_60px_rgba(0,0,0,0.12)]"
         suppressHydrationWarning
       >
 
-        {/* Exhibition label row */}
-        <div className="flex items-center justify-between px-7 pt-7 pb-5">
-          <span className="text-[9px] tracking-[0.5em] font-bold text-[#CBD5E1] uppercase">
-            [{catalogNum}]
-          </span>
-          <span className="text-[9px] tracking-[0.35em] font-bold text-[#CBD5E1] uppercase">
-            {categoryTag}
+        {/* Cyan (#17a2b8) category tag */}
+        <div className="px-6 pt-5 pb-3" suppressHydrationWarning>
+          <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-[#17a2b8]">
+            {categoryLabel}
           </span>
         </div>
 
-        {/* Image — inset white frame */}
-        <div className="mx-7 aspect-4/3 bg-white overflow-hidden relative">
+        {/* Large product image — shielded for extension-injected attributes */}
+        <div className="relative aspect-[4/5] w-full overflow-hidden bg-white" suppressHydrationWarning>
           {product.image_url ? (
             <Image
               src={product.image_url}
               alt={product.name}
               fill
               className="object-cover group-hover:scale-[1.03] transition-transform duration-700"
+              sizes="(max-width: 640px) 100vw, 50vw"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center bg-slate-50" suppressHydrationWarning>
               <span className="text-[9px] tracking-[0.4em] text-[#E2E8F0] uppercase font-bold">
                 No Image
               </span>
@@ -217,7 +215,7 @@ export function ProductCard({
 
           {/* Admin controls */}
           {isAdmin && (
-            <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
+            <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10" suppressHydrationWarning>
               <button
                 onClick={() => setEditOpen(true)}
                 title="Edit product"
@@ -240,41 +238,27 @@ export function ProductCard({
           )}
         </div>
 
-        {/* Scientific provenance */}
-        <div className="px-7 py-7 flex flex-col gap-3 flex-1">
+        {/* Navy (#0F172A) Playfair Display title + description */}
+        <div className="px-6 py-5 flex flex-col gap-3 flex-1" suppressHydrationWarning>
 
-          {/* Catalog metadata */}
-          <p className="text-[9px] tracking-[0.45em] font-bold text-[#CBD5E1] uppercase">
-            CATALOG {catalogNum} · {categoryTag}
-          </p>
-
-          {/* Exhibition title */}
-          <h3 className="font-serif text-lg font-bold italic text-[#0F172A] leading-snug">
+          <h3 className="font-serif text-xl font-bold text-[#0F172A] leading-snug">
             {product.name}
           </h3>
 
-          {/* Description */}
           {product.description && (
-            <p className="text-[11px] text-[#94A3B8] leading-relaxed mt-0.5">
+            <p className="text-[13px] text-[#64748B] leading-relaxed line-clamp-2">
               {product.description}
             </p>
           )}
 
-          {/* Spacer */}
-          <div className="flex-1" />
+          <div className="h-px bg-slate-100 mt-2" />
 
-          {/* Thin rule */}
-          <div className="h-px bg-slate-200 mt-3" />
-
-          {/* Non-transactional CTA */}
+          {/* Primary Red (#ef3825) Clinical Details — opens inquiry modal */}
           <button
             onClick={() => setInquireOpen(true)}
-            className="self-start flex items-center gap-3 text-[9px] tracking-[0.45em] font-bold text-[#CBD5E1] uppercase hover:text-[#0F172A] transition-colors duration-300 pt-1"
+            className="w-full py-3 px-4 rounded-xl bg-[#ef3825] hover:bg-[#d42f1d] text-white text-sm font-semibold transition-colors duration-300 shadow-sm mt-2"
           >
-            PRIVATE INQUIRY
-            <span className="group-hover:translate-x-0.5 transition-transform duration-300 inline-block">
-              →
-            </span>
+            Clinical Details
           </button>
 
         </div>

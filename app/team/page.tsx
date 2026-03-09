@@ -151,13 +151,15 @@ export default async function TeamPage() {
       <section className="pt-28 pb-14 px-6 bg-white" suppressHydrationWarning>
         <div className="max-w-5xl mx-auto" suppressHydrationWarning>
 
-          {/* Breadcrumb — extensions may inject attributes on links */}
+          {/* Breadcrumb — bis_skin_checked and other extension attributes on links */}
           <nav
             aria-label="Breadcrumb"
             className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 text-xs text-[#64748B] mb-8 shadow-sm"
             suppressHydrationWarning
           >
-            <Link href="/" className="hover:text-[#17a2b8] transition-colors">Home</Link>
+            <Link href="/" className="hover:text-[#17a2b8] transition-colors" suppressHydrationWarning>
+              Home
+            </Link>
             <span aria-hidden className="text-slate-300">/</span>
             <span className="text-[#0F172A] font-medium">Our Team</span>
           </nav>
@@ -172,12 +174,13 @@ export default async function TeamPage() {
             excellence and naturally beautiful results.
           </p>
 
-          <div className="mt-8 flex items-center gap-4">
-            <div className="h-px flex-1 max-w-xs bg-linear-to-r from-[#17a2b8]/40 to-transparent" />
+          {/* Location indicator + decorative gradient lines — shielded from extension attribute injection */}
+          <div className="mt-8 flex items-center gap-4" suppressHydrationWarning={true}>
+            <div className="h-px flex-1 max-w-xs bg-linear-to-r from-[#17a2b8]/40 to-transparent" suppressHydrationWarning={true} />
             <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#17a2b8]">
               Dover, DE
             </span>
-            <div className="h-px w-12 bg-[#17a2b8]/20" />
+            <div className="h-px w-12 bg-[#17a2b8]/20" suppressHydrationWarning={true} />
           </div>
 
         </div>

@@ -10,43 +10,16 @@ export const metadata: Metadata = {
     "Medical-grade skincare and treatment essentials curated by the Bella MediSpa team.",
 };
 
-const CATEGORY_ORDER = ["skincare", "kits", "masks", "prescriptions"];
-
-function groupByCategory(products: Product[]) {
-  const map: Record<string, Product[]> = {};
-  for (const p of products) {
-    const cat = p.category ?? "other";
-    (map[cat] ??= []).push(p);
-  }
-  return map;
-}
-
-const CATEGORY_LABELS: Record<string, string> = {
-  skincare:      "SKINCARE",
-  kits:          "TREATMENT KITS",
-  masks:         "MASKS & RECOVERY",
-  prescriptions: "PRESCRIPTION",
-  other:         "GENERAL",
-};
-
 export default async function ShopPage() {
   const { products, error } = await getActiveProducts();
 
-  const grouped = groupByCategory(products);
-  const categories = [
-    ...CATEGORY_ORDER.filter((c) => grouped[c]),
-    ...Object.keys(grouped).filter((c) => !CATEGORY_ORDER.includes(c)),
-  ];
-
-  let globalIdx = 0;
-
   return (
-    <div className="min-h-screen bg-white text-[#0F172A] pt-16">
-      <div className="max-w-5xl mx-auto px-8 py-24">
+    <div className="min-h-screen bg-[#FAFAFA] text-[#0F172A] pt-16" suppressHydrationWarning>
+      <div className="max-w-6xl mx-auto px-6 md:px-8 py-24" suppressHydrationWarning>
 
-        {/* Exhibition masthead */}
-        <div className="mb-24">
-          <div className="flex items-center gap-4 mb-8">
+        {/* Exhibition masthead — shielded from extension scanning */}
+        <div className="mb-20" suppressHydrationWarning>
+          <div className="flex items-center gap-4 mb-8" suppressHydrationWarning>
             <span className="w-10 h-px bg-slate-200" />
             <span className="text-[9px] tracking-[0.45em] font-bold text-[#94A3B8] uppercase">
               Dover, Delaware · Est. 2024
@@ -63,7 +36,7 @@ export default async function ShopPage() {
         <ShopAdminBar />
 
         {error ? (
-          <div className="py-24 border border-dashed border-slate-200">
+          <div className="py-24 border border-dashed border-slate-200" suppressHydrationWarning>
             <div className="flex flex-col items-center gap-4">
               <p className="text-[9px] tracking-[0.4em] font-bold text-red-400 uppercase">
                 Archive Unavailable
@@ -76,46 +49,35 @@ export default async function ShopPage() {
             </div>
           </div>
         ) : products.length === 0 ? (
-          <div className="py-24 border border-dashed border-slate-200 text-center">
+          <div className="py-24 border border-dashed border-slate-200 text-center" suppressHydrationWarning>
             <p className="text-[9px] tracking-[0.4em] font-bold text-[#CBD5E1] uppercase">
               Collection in Preparation
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-24">
-            {categories.map((cat) => (
-              <section key={cat}>
-
-                {/* Exhibition room label */}
-                <div className="flex items-center gap-6 mb-12">
-                  <div className="h-px flex-1 bg-slate-100" />
-                  <span className="text-[9px] tracking-[0.5em] font-bold text-[#CBD5E1] uppercase">
-                    {CATEGORY_LABELS[cat] ?? cat.toUpperCase()}
-                  </span>
-                  <div className="h-px flex-1 bg-slate-100" />
-                </div>
-
-                {/* Exhibit panels — 2-column gallery wall */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-slate-100">
-                  {grouped[cat].map((p) => {
-                    const idx = globalIdx++;
-                    return <ProductCard key={p.id} product={p} index={idx} />;
-                  })}
-                </div>
-
-              </section>
+          /* Asymmetrical 2-column gallery — staggered flow */
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-12" suppressHydrationWarning>
+            {products.map((p, idx) => (
+              <div
+                key={p.id}
+                className={idx % 2 === 1 ? "sm:pt-16" : idx % 3 === 2 ? "sm:pt-8" : ""}
+                suppressHydrationWarning
+              >
+                <ProductCard product={p} index={idx} />
+              </div>
             ))}
+          </div>
+        )}
 
-            {/* Archive colophon */}
-            <div className="flex items-center gap-6 pt-8 border-t border-slate-100">
-              <span className="text-[9px] tracking-[0.45em] font-bold text-[#E2E8F0] uppercase">
-                End of Archive
-              </span>
-              <div className="h-px flex-1 bg-slate-100" />
-              <span className="text-[9px] tracking-[0.45em] font-bold text-[#E2E8F0] uppercase">
-                Bella MediSpa
-              </span>
-            </div>
+        {!error && products.length > 0 && (
+          <div className="flex items-center gap-6 pt-16 mt-16 border-t border-slate-200" suppressHydrationWarning>
+            <span className="text-[9px] tracking-[0.45em] font-bold text-[#E2E8F0] uppercase">
+              End of Archive
+            </span>
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-[9px] tracking-[0.45em] font-bold text-[#E2E8F0] uppercase">
+              Bella MediSpa
+            </span>
           </div>
         )}
 
