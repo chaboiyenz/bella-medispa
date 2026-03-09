@@ -1,91 +1,172 @@
-Building a **BELLA MEDISPA 2.0** with zero-to-low overhead means we need to be ruthless about what stays and what goes. By removing the strict time-bound sprints and focusing on **high-value User Stories**, you can develop at your own pace while ensuring every line of code directly contributes to revenue or automation.
+BELLA MEDISPA 2.1 – PRODUCT DESIGN DOCUMENT
 
-Here is your revised, "Scrum-lite" PDD optimized for 2026.
+Goal:
+Create a high-conversion clinic website that:
+• showcases treatments and products
+• allows appointment booking
+• provides instant support via AI chatbot
+• allows admins to manage services and bookings
 
----
+The platform is NOT an e-commerce store.
 
-## 📘 BELLA MEDISPA 2.0: Optimized PDD
+Products are displayed for marketing purposes only.
+Purchases occur in-clinic.
 
-**Goal:** High-conversion, zero-maintenance platform for a modern clinic.
+------------------------------------------------
 
----
+1. Product Philosophy
 
-### 1️⃣ The Tiered MVP Strategy
+This platform focuses on:
 
-Instead of Sprints, we work in **Versions**. Each version must be functional and "shippable."
+• Lead generation
+• Appointment booking
+• Clinic credibility
+• AI-assisted client education
 
-#### **MVP V1: The "Lead Gen" Engine ($0 Cost)**
+The site must be:
 
-- **Focus:** Getting found on Google and capturing contact info.
-- **Features:** Responsive Landing Page, SEO Metadata, "Service Menu," and a simple **Contact/Lead Form** (Supabase).
-- **The "No-Cost" Win:** Use **Next.js** on Vercel and **Supabase Auth** for basic user signups.
+• fast
+• mobile-first
+• SEO optimized
+• easy for staff to manage
 
-#### **MVP V2: The "Revenue" Engine (Low Cost)**
+------------------------------------------------
 
-- **Focus:** Automating payments and bookings to reduce phone calls.
-- **Features:** Real-time Booking Calendar, **Stripe Hosted Checkout**, and Automated Email Confirmations.
-- **The "No-Cost" Win:** Use **Stripe’s Hosted Pricing Table**—you don't have to code a UI for products; Stripe generates it for you.
+2. Product Versions
 
-#### **MVP V3: The "Efficiency" Engine (AI Phase)**
+Instead of sprints, development progresses in versions.
 
-- **Focus:** Reducing manual FAQ answering.
-- **Features:** RAG-based AI Chatbot (using **pgvector** in Supabase) and Admin Dashboard for managing treatments.
-- **The "No-Cost" Win:** Use **Groq** or **Together AI** APIs—they offer massive free tiers for Llama 3 models.
+Each version must be deployable.
 
----
+------------------------------------------------
 
-### 2️⃣ Refined User Stories
+VERSION 1 – Digital Presence (Foundation)
 
-These stories are your "To-Do List." A feature is only built if it satisfies a story.
+Goal:
+Create a professional clinic website.
 
-#### **Category: The Client Experience**
+Features:
 
-| ID     | User Story                                                                  | Acceptance Criteria (Definition of Done)                                |
-| ------ | --------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| **U1** | **As a client**, I want to see a mobile-friendly service menu...            | Clear pricing, high-quality images, and <2s load time.                  |
-| **U2** | **As a client**, I want to pick a specific time for a facial...             | Calendar shows _only_ available slots; no double-booking.               |
-| **U3** | **As a client**, I want to pay securely via Apple/Google Pay...             | Redirects to Stripe; user receives an automated receipt via **Resend**. |
-| **U4** | **As a client**, I want to ask "What is the downtime for Microneedling?"... | AI responds instantly using the clinic’s specific FAQ data.             |
+• Landing page
+• Services showcase
+• Product showcase (non-commerce)
+• Contact form
+• Booking system
+• Admin login
+• Admin dashboard
 
-#### **Category: The Admin (Business Owner)**
+Success Criteria:
 
-| ID     | User Story                                                       | Acceptance Criteria (Definition of Done)                        |
-| ------ | ---------------------------------------------------------------- | --------------------------------------------------------------- |
-| **A1** | **As an admin**, I want to block out "Staff Training" hours...   | The blocked time disappears from the client-facing calendar.    |
-| **A2** | **As an admin**, I want to see a daily "Run Sheet" of clients... | A simple table view of Name, Time, and Service for the day.     |
-| **A3** | **As an admin**, I want to update product prices in one place... | Changing a price in the DB reflects on the website immediately. |
+• users can view services
+• users can book appointments
+• admins can manage services
+• admins can view bookings
 
----
+------------------------------------------------
 
-### 3️⃣ Definition of Done (DoD) & Quality Gates
+VERSION 2 – AI Concierge
 
-Since there are no sprints to "review," you must hold yourself to this standard before any code hits the `main` branch:
+Goal:
+Provide instant answers to common clinic questions.
 
-- **Zero Console Errors:** The browser inspector is clean.
-- **Mobile-Perfect:** Tested on "iPhone 14" and "Pixel 7" dev views.
-- **SEO Validated:** Meta titles and descriptions are unique for every service page.
-- **Secure:** Admin routes return a `403` or `404` if not logged in.
-- **Edge-Ready:** Images are compressed (WebP) to save on Vercel bandwidth costs.
+Features:
 
----
+• floating chatbot UI
+• FAQ-driven AI responses
+• treatment explanations
+• recovery / downtime info
+• consultation suggestions
 
-### 4️⃣ Risk Management (The "Solo Dev" Guardrails)
+Guardrails:
 
-- **Risk:** "I'm spending too much time on CSS."
-- **Mitigation:** Use **Shadcn/UI** or **Tailwind UI**. Don't write raw CSS; use pre-built accessible components.
+• chatbot cannot give medical diagnosis
+• must display medical disclaimer
 
-- **Risk:** "AI is hallucinating medical advice."
-- **Mitigation:** Hard-code a "Medical Disclaimer" in the Chat UI and restrict the AI system prompt to _only_ answer based on provided text.
+------------------------------------------------
 
-- **Risk:** "Database grows too large for the Free Tier."
-- **Mitigation:** Use **Supabase Storage** for images (with optimization) instead of storing base64 strings in the database.
+VERSION 3 – Operational Efficiency
 
----
+Goal:
+Reduce manual admin work.
 
-### 5️⃣ Prioritization Strategy (The "Value" Filter)
+Features:
 
-1. **High Value / Low Effort:** Booking form, SEO, Stripe Checkout. (**DO THESE FIRST**)
-2. **High Value / High Effort:** AI Chatbot, Custom Admin Dashboard. (**DO THESE SECOND**)
-3. **Low Value / Low Effort:** Dark mode, custom animations, social media feed. (**DO THESE LAST**)
+• booking approval workflow
+• calendar management
+• service availability blocking
+• admin notifications
 
----
+------------------------------------------------
+
+3. User Stories
+
+CLIENT EXPERIENCE
+
+U1
+As a client,
+I want to browse services easily
+so that I can understand available treatments.
+
+U2
+As a client,
+I want to book an appointment online
+so that I don’t need to call the clinic.
+
+U3
+As a client,
+I want to view available skincare products
+so I can ask about them during my visit.
+
+U4
+As a client,
+I want to ask questions through a chatbot
+so I can quickly learn about treatments.
+
+------------------------------------------------
+
+ADMIN EXPERIENCE
+
+A1
+As an admin,
+I want to manage services
+so the website always reflects current offerings.
+
+A2
+As an admin,
+I want to view bookings
+so I can prepare the clinic schedule.
+
+A3
+As an admin,
+I want to accept or reject bookings
+so the calendar stays accurate.
+
+A4
+As an admin,
+I want to update product showcases
+so clients see the latest skincare products.
+
+------------------------------------------------
+
+4. Definition of Done
+
+A feature is complete when:
+
+• no console errors exist
+• mobile layout is verified
+• SEO metadata is implemented
+• admin routes are protected
+• performance remains high (90+ Lighthouse)
+
+------------------------------------------------
+
+5. Risk Management
+
+Risk: chatbot giving unsafe medical advice
+Mitigation: strict system prompt + disclaimer
+
+Risk: booking conflicts
+Mitigation: database constraints
+
+Risk: slow website
+Mitigation: image optimization + Next.js caching

@@ -1,15 +1,30 @@
 -- ============================================================
 -- Bella MediSpa 2.0 — Block 2: Core Schema
 -- Run in: Supabase Dashboard → SQL Editor
+-- Re-runnable: safe to execute multiple times (idempotent)
 -- ============================================================
 
 -- Required extension for GIST exclusion constraint
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 -- ── Enums ────────────────────────────────────────────────────
-CREATE TYPE user_role      AS ENUM ('admin', 'client');
-CREATE TYPE booking_status AS ENUM ('pending', 'confirmed', 'cancelled', 'completed');
-CREATE TYPE order_status   AS ENUM ('pending', 'paid', 'shipped', 'delivered', 'cancelled');
+-- PostgreSQL has no CREATE TYPE IF NOT EXISTS, so we use a DO
+-- block with an exception guard instead.
+
+DO $$ BEGIN
+  CREATE TYPE user_role AS ENUM ('admin', 'client');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE booking_status AS ENUM ('pending', 'confirmed', 'cancelled', 'completed');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE order_status AS ENUM ('pending', 'paid', 'shipped', 'delivered', 'cancelled');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ── Profiles (mirrors auth.users) ───────────────────────────
 CREATE TABLE IF NOT EXISTS profiles (
@@ -21,6 +36,24 @@ CREATE TABLE IF NOT EXISTS profiles (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ── is_admin() — SECURITY DEFINER helper ─────────────────────
+-- Defined here (after profiles) so ALL subsequent migrations can
+-- use it without circular dependencies.
+-- Reads profiles bypassing RLS to prevent infinite recursion in
+-- any policy that also lives on profiles.
+CREATE OR REPLACE FUNCTION public.is_admin()
+  RETURNS BOOLEAN
+  LANGUAGE sql
+  STABLE
+  SECURITY DEFINER
+  SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
 
 -- ── Services ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS services (
@@ -79,24 +112,28 @@ ALTER TABLE services  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookings  ENABLE ROW LEVEL SECURITY;
 
 -- Profiles
+DROP POLICY IF EXISTS "profiles: user reads own"   ON profiles;
+DROP POLICY IF EXISTS "profiles: user updates own" ON profiles;
+DROP POLICY IF EXISTS "profiles: admin reads all"  ON profiles;
+
 CREATE POLICY "profiles: user reads own"   ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "profiles: user updates own" ON profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "profiles: admin reads all"  ON profiles FOR SELECT USING (
-  EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin')
-);
+CREATE POLICY "profiles: admin reads all"  ON profiles FOR SELECT USING (is_admin());
 
 -- Services — public read, admin write
+DROP POLICY IF EXISTS "services: public read active" ON services;
+DROP POLICY IF EXISTS "services: admin insert"       ON services;
+DROP POLICY IF EXISTS "services: admin update"       ON services;
+
 CREATE POLICY "services: public read active" ON services FOR SELECT USING (is_active = TRUE);
-CREATE POLICY "services: admin insert"       ON services FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin')
-);
-CREATE POLICY "services: admin update"       ON services FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin')
-);
+CREATE POLICY "services: admin insert"       ON services FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY "services: admin update"       ON services FOR UPDATE USING (is_admin());
 
 -- Bookings
-CREATE POLICY "bookings: client reads own"    ON bookings FOR SELECT USING (auth.uid() = client_id);
-CREATE POLICY "bookings: client creates own"  ON bookings FOR INSERT WITH CHECK (auth.uid() = client_id);
-CREATE POLICY "bookings: admin manages all"   ON bookings USING (
-  EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin')
-);
+DROP POLICY IF EXISTS "bookings: client reads own"   ON bookings;
+DROP POLICY IF EXISTS "bookings: client creates own" ON bookings;
+DROP POLICY IF EXISTS "bookings: admin manages all"  ON bookings;
+
+CREATE POLICY "bookings: client reads own"   ON bookings FOR SELECT USING (auth.uid() = client_id);
+CREATE POLICY "bookings: client creates own" ON bookings FOR INSERT WITH CHECK (auth.uid() = client_id);
+CREATE POLICY "bookings: admin manages all"  ON bookings USING (is_admin());

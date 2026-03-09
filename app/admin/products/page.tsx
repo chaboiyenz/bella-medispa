@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { toggleProductActive, updateProduct } from "@/lib/actions/admin";
+import { toggleProductActive, updateProduct, deleteProduct } from "@/lib/actions/admin";
+import Link from "next/link";
 
 export default async function AdminProductsPage() {
   const supabase = await createAdminClient();
@@ -11,22 +12,33 @@ export default async function AdminProductsPage() {
     .order("name");
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-serif font-semibold text-white">
-          Products
-        </h1>
-        <p className="text-sm text-white/40 mt-1">
-          {products?.length ?? 0} products
-        </p>
+    <div className="p-8" suppressHydrationWarning>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-serif font-semibold text-white">
+            Products
+          </h1>
+          <p className="text-sm text-white/40 mt-1">
+            {products?.length ?? 0} products
+          </p>
+        </div>
+        <Link
+          href="/admin/products/new"
+          className="text-sm px-4 py-2 rounded-xl bg-[#ef3825] text-white font-semibold hover:bg-[#d42f1d] transition-colors"
+        >
+          + New Product
+        </Link>
       </div>
 
       {!products?.length ? (
         <div className="text-center py-24 text-white/30 text-sm">
-          No products yet. Run <code className="font-mono">supabase/seed_products.sql</code>.
+          No products yet.{" "}
+          <Link href="/admin/products/new" className="text-[#17a2b8] hover:underline">
+            Create your first product
+          </Link>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" suppressHydrationWarning>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/10 text-left text-xs text-white/40 uppercase tracking-wide">
@@ -34,7 +46,8 @@ export default async function AdminProductsPage() {
                 <th className="pb-3 pr-6 font-medium">Category</th>
                 <th className="pb-3 pr-6 font-medium">Price</th>
                 <th className="pb-3 pr-6 font-medium">Stock</th>
-                <th className="pb-3 font-medium">Active</th>
+                <th className="pb-3 pr-6 font-medium">Active</th>
+                <th className="pb-3 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -90,7 +103,7 @@ export default async function AdminProductsPage() {
                   </td>
 
                   {/* Toggle active */}
-                  <td className="py-4">
+                  <td className="py-4 pr-6">
                     <form action={async () => {
                       "use server";
                       await toggleProductActive(p.id, !p.is_active);
@@ -104,6 +117,21 @@ export default async function AdminProductsPage() {
                         <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
                           p.is_active ? "translate-x-5" : "translate-x-0.5"
                         }`} />
+                      </button>
+                    </form>
+                  </td>
+
+                  {/* Delete */}
+                  <td className="py-4">
+                    <form action={async () => {
+                      "use server";
+                      await deleteProduct(p.id);
+                    }}>
+                      <button
+                        type="submit"
+                        className="text-xs px-3 py-1.5 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors"
+                      >
+                        Delete
                       </button>
                     </form>
                   </td>

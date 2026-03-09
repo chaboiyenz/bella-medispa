@@ -1,5 +1,6 @@
 -- =============================================
 -- Block 7: Treatment Detail Pages
+-- Re-runnable: safe to execute multiple times (idempotent)
 -- =============================================
 
 CREATE TABLE IF NOT EXISTS treatment_details (
@@ -21,12 +22,15 @@ CREATE TABLE IF NOT EXISTS treatment_details (
 );
 
 -- Indexes
-CREATE INDEX IF NOT EXISTS treatment_details_slug_idx ON treatment_details (slug);
+CREATE INDEX IF NOT EXISTS treatment_details_slug_idx     ON treatment_details (slug);
 CREATE INDEX IF NOT EXISTS treatment_details_category_idx ON treatment_details (category);
-CREATE INDEX IF NOT EXISTS treatment_details_active_idx ON treatment_details (is_active);
+CREATE INDEX IF NOT EXISTS treatment_details_active_idx   ON treatment_details (is_active);
 
 -- RLS
 ALTER TABLE treatment_details ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can read active treatments" ON treatment_details;
+DROP POLICY IF EXISTS "Admins can manage treatments"      ON treatment_details;
 
 CREATE POLICY "Public can read active treatments"
   ON treatment_details FOR SELECT
@@ -34,10 +38,4 @@ CREATE POLICY "Public can read active treatments"
 
 CREATE POLICY "Admins can manage treatments"
   ON treatment_details
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-        AND profiles.role = 'admin'
-    )
-  );
+  USING (is_admin());

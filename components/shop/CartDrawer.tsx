@@ -1,37 +1,57 @@
 "use client";
 
-import { ShoppingBag, Minus, Plus, Trash2, X, ArrowRight } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useEffect, useState } from "react";
+import { ShoppingBag, Minus, Plus, Trash2, ArrowRight } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/context/CartContext";
 
 export function CartDrawer() {
-  const { items, count, total, update, remove, clear } = useCart();
+  const { items, count, total, update, remove, clear, cartOpen, setCartOpen } = useCart();
+
+  // Flash a cyan glow ring each time the drawer opens from an add-to-cart action
+  const [glow, setGlow] = useState(false);
+  useEffect(() => {
+    if (cartOpen) {
+      setGlow(true);
+      const t = setTimeout(() => setGlow(false), 900);
+      return () => clearTimeout(t);
+    }
+  }, [cartOpen]);
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <button
-          aria-label={`Cart (${count} items)`}
-          className="relative p-2 text-[#64748B] hover:text-[#17a2b8] transition-colors rounded-full hover:bg-white/60"
-        >
-          <ShoppingBag className="w-4 h-4" />
-          {count > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#ef3825] text-white text-[9px] font-bold flex items-center justify-center">
-              {count > 9 ? "9+" : count}
-            </span>
-          )}
-        </button>
-      </SheetTrigger>
+    <Sheet open={cartOpen} onOpenChange={setCartOpen}>
+      {/* Trigger — cart icon used in the Navbar */}
+      <button
+        onClick={() => setCartOpen(true)}
+        aria-label={`Cart (${count} items)`}
+        className="relative p-2 text-[#64748B] hover:text-[#17a2b8] transition-colors rounded-full hover:bg-white/60"
+      >
+        <ShoppingBag className="w-4 h-4" />
+        {count > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#ef3825] text-white text-[9px] font-bold flex items-center justify-center">
+            {count > 9 ? "9+" : count}
+          </span>
+        )}
+      </button>
 
-      <SheetContent side="right" className="w-[340px] sm:w-[400px] bg-white/95 backdrop-blur-xl border-l border-white/30 p-0 flex flex-col">
+      <SheetContent
+        side="right"
+        className={[
+          "w-[340px] sm:w-[400px] bg-white border-l border-[#F1F5F9] p-0 flex flex-col",
+          "transition-[box-shadow,ring] duration-700",
+          glow
+            ? "shadow-[0_0_40px_rgba(23,162,184,0.35)] ring-2 ring-[#17a2b8]/60"
+            : "",
+        ].join(" ")}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#F1F5F9]">
+        <SheetHeader className="flex-row items-center justify-between px-6 py-5 border-b border-[#F1F5F9]">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-4 h-4 text-[#17a2b8]" />
-            <h2 className="font-serif font-semibold text-[#0F172A]">
-              Your Cart
-            </h2>
+            <SheetTitle className="font-serif font-semibold text-[#0F172A]">
+              Your Shopping Cart
+            </SheetTitle>
             {count > 0 && (
               <span className="text-xs text-[#64748B]">({count} items)</span>
             )}
@@ -44,7 +64,7 @@ export function CartDrawer() {
               Clear all
             </button>
           )}
-        </div>
+        </SheetHeader>
 
         {/* Items */}
         <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-3 no-scrollbar">
@@ -111,7 +131,7 @@ export function CartDrawer() {
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="px-6 py-5 border-t border-[#F1F5F9] flex flex-col gap-3 bg-white/80">
+          <div className="px-6 py-5 border-t border-[#F1F5F9] flex flex-col gap-3 bg-white">
             <div className="flex items-center justify-between">
               <span className="text-sm text-[#64748B]">Subtotal</span>
               <span className="text-lg font-bold text-[#0F172A]">

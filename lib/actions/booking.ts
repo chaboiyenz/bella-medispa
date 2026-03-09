@@ -49,12 +49,13 @@ export async function createBooking(
   const { data, error } = await supabase
     .from("bookings")
     .insert({
-      service_id: input.service_id,
-      client_id:  user.id,
-      slot_start: input.slot_start,
-      slot_end:   input.slot_end,
-      notes:      input.notes ?? null,
-      status:     "pending",
+      service_id:        input.service_id,
+      client_id:         user.id,
+      slot_start:        input.slot_start,
+      slot_end:          input.slot_end,
+      notes:             input.notes ?? null,
+      status:            "pending" as const,
+      stripe_session_id: null,
     })
     .select("id")
     .single();

@@ -1,79 +1,301 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Image from "next/image";
-import { ShoppingBag, Plus } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useCart } from "@/lib/context/CartContext";
+import { useRouter } from "next/navigation";
+import { Pencil, Trash2, Loader2, CheckCircle2 } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useAdminMode } from "@/lib/context/AdminModeContext";
+import { deleteProduct } from "@/lib/actions/admin";
+import { ProductCRUDModal } from "@/components/admin/ProductCRUDModal";
 import type { Product } from "@/types";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  skincare:      "Skincare",
-  kits:          "Treatment Kits",
-  masks:         "Masks",
-  prescriptions: "Rx",
-};
+// ── Private Inquiry modal ─────────────────────────────────────────────────────
 
-export function ProductCard({ product }: { product: Product }) {
-  const { add, items } = useCart();
-  const inCart = items.find((i) => i.product.id === product.id);
+function InquireModal({
+  product,
+  open,
+  onClose,
+}: {
+  product: Product;
+  open:    boolean;
+  onClose: () => void;
+}) {
+  const [name, setName]           = useState("");
+  const [contact, setContact]     = useState("");
+  const [message, setMessage]     = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim() || !contact.trim()) return;
+    setLoading(true);
+    // Simulated async — swap for a real server action when ready
+    await new Promise((r) => setTimeout(r, 700));
+    setLoading(false);
+    setSubmitted(true);
+  }
+
+  function handleClose() {
+    setName(""); setContact(""); setMessage("");
+    setSubmitted(false);
+    onClose();
+  }
+
+  const FIELD =
+    "w-full bg-transparent border-0 border-b border-slate-200 pb-2.5 text-sm " +
+    "text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:border-[#0F172A] " +
+    "transition-colors duration-200 disabled:opacity-50";
 
   return (
-    <Card className="group glass border border-white/30 rounded-3xl p-2 shadow-sm shadow-slate-200/50 hover:shadow-xl hover:shadow-[#17a2b8]/10 transition-all duration-300 hover:-translate-y-2">
-      {/* Image */}
-      <div className="aspect-square overflow-hidden rounded-2xl relative bg-[#F8FAFC]">
-        {product.image_url ? (
-          <Image
-            src={product.image_url}
-            alt={product.name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ShoppingBag className="w-12 h-12 text-[#CBD5E1]" />
-          </div>
-        )}
-        {/* Category pill */}
-        <span className="absolute top-3 left-3 text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full bg-white/80 backdrop-blur-sm text-[#64748B]">
-          {CATEGORY_LABELS[product.category ?? ""] ?? product.category}
-        </span>
-        {inCart && (
-          <span className="absolute top-3 right-3 text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#17a2b8] text-white">
-            {inCart.quantity} in cart
-          </span>
-        )}
-      </div>
+    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+      <DialogContent className="bg-white max-w-sm p-0 border-0 shadow-2xl rounded-none overflow-hidden">
+        {/* Accessible label — always present; visually hidden so the archival header shows instead */}
+        <DialogTitle className="sr-only">Private Inquiry: {product.name}</DialogTitle>
 
-      <CardContent className="p-5 flex flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <h3 className="font-semibold text-[#0F172A] text-sm leading-snug">
-            {product.name}
-          </h3>
-          {product.description && (
-            <p className="text-xs text-[#64748B] leading-relaxed line-clamp-2">
-              {product.description}
-            </p>
+        {submitted ? (
+          /* ── Archive confirmation ── */
+          <div className="px-10 py-16 flex flex-col items-center gap-6 text-center">
+            <span className="w-11 h-11 rounded-full border border-[#17a2b8]/25 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-[#17a2b8]" />
+            </span>
+            <div>
+              <p className="text-[9px] tracking-[0.45em] font-bold text-[#94A3B8] uppercase mb-3">
+                Inquiry Received
+              </p>
+              <p className="font-serif text-xl font-bold italic text-[#0F172A]">
+                We Will Be in Touch
+              </p>
+              <p className="text-[11px] text-[#64748B] mt-3 max-w-[26ch] leading-relaxed mx-auto">
+                Our team will respond within 24 hours to arrange collection at our
+                Dover, DE studio.
+              </p>
+            </div>
+            <button
+              onClick={handleClose}
+              className="text-[9px] tracking-[0.4em] font-bold text-[#94A3B8] uppercase hover:text-[#0F172A] transition-colors"
+            >
+              CLOSE ARCHIVE
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Exhibit header */}
+            <div className="px-10 pt-10 pb-6 border-b border-slate-100">
+              <p className="text-[9px] tracking-[0.4em] font-bold text-[#94A3B8] uppercase mb-1.5">
+                Private Inquiry
+              </p>
+              <p className="font-serif text-xl font-bold italic text-[#0F172A] leading-tight">
+                Request Access<br />to Archive
+              </p>
+            </div>
+
+            {/* Form body */}
+            <form onSubmit={handleSubmit} className="px-10 py-8 flex flex-col gap-6">
+              <p className="text-[11px] text-[#94A3B8] leading-relaxed -mt-2">
+                Complete the form to request{" "}
+                <span className="italic text-[#0F172A]">{product.name}</span>.
+                Our team will contact you to arrange collection in Dover, DE.
+              </p>
+
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name *"
+                required
+                disabled={loading}
+                className={FIELD}
+              />
+              <input
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="Phone or email *"
+                required
+                disabled={loading}
+                className={FIELD}
+              />
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Preferred date or questions… (optional)"
+                rows={2}
+                disabled={loading}
+                className={`${FIELD} resize-none`}
+              />
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <button
+                  type="submit"
+                  disabled={loading || !name.trim() || !contact.trim()}
+                  className="flex items-center gap-2 text-[9px] tracking-[0.4em] font-bold text-[#0F172A] uppercase hover:text-[#17a2b8] disabled:opacity-40 transition-colors"
+                >
+                  {loading && <Loader2 className="w-3 h-3 animate-spin" />}
+                  {loading ? "TRANSMITTING…" : "SUBMIT INQUIRY"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="text-[9px] tracking-[0.4em] font-bold text-[#CBD5E1] uppercase hover:text-[#0F172A] transition-colors"
+                >
+                  CANCEL
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Exhibit Card ──────────────────────────────────────────────────────────────
+
+export function ProductCard({
+  product,
+  index = 0,
+}: {
+  product: Product;
+  index?: number;
+}) {
+  const { isAdmin }                   = useAdminMode();
+  const router                        = useRouter();
+  const [, startTransition]           = useTransition();
+  const [inquireOpen, setInquireOpen] = useState(false);
+  const [editOpen, setEditOpen]       = useState(false);
+  const [deleting, setDeleting]       = useState(false);
+
+  const catalogNum  = String(index + 1).padStart(3, "0");
+  const categoryTag = product.category?.toUpperCase() ?? "GENERAL";
+
+  async function handleDelete() {
+    if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      await deleteProduct(product.id);
+      startTransition(() => router.refresh());
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <>
+      {/* ── Exhibit panel ── */}
+      <div
+        className="group relative bg-[#FAFAFA] flex flex-col transition-shadow duration-500 hover:shadow-[0_8px_48px_rgba(0,0,0,0.08)] hover:z-10"
+        suppressHydrationWarning
+      >
+
+        {/* Exhibition label row */}
+        <div className="flex items-center justify-between px-7 pt-7 pb-5">
+          <span className="text-[9px] tracking-[0.5em] font-bold text-[#CBD5E1] uppercase">
+            [{catalogNum}]
+          </span>
+          <span className="text-[9px] tracking-[0.35em] font-bold text-[#CBD5E1] uppercase">
+            {categoryTag}
+          </span>
+        </div>
+
+        {/* Image — inset white frame */}
+        <div className="mx-7 aspect-4/3 bg-white overflow-hidden relative">
+          {product.image_url ? (
+            <Image
+              src={product.image_url}
+              alt={product.name}
+              fill
+              className="object-cover group-hover:scale-[1.03] transition-transform duration-700"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-[9px] tracking-[0.4em] text-[#E2E8F0] uppercase font-bold">
+                No Image
+              </span>
+            </div>
+          )}
+
+          {/* Admin controls */}
+          {isAdmin && (
+            <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
+              <button
+                onClick={() => setEditOpen(true)}
+                title="Edit product"
+                className="w-7 h-7 rounded-full bg-white shadow-lg flex items-center justify-center text-[#94A3B8] hover:text-[#17a2b8] transition-all"
+              >
+                <Pencil className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                title="Delete product"
+                className="w-7 h-7 rounded-full bg-white shadow-lg flex items-center justify-center text-[#94A3B8] hover:text-[#ef3825] disabled:opacity-50 transition-all"
+              >
+                {deleting
+                  ? <Loader2 className="w-3 h-3 animate-spin" />
+                  : <Trash2 className="w-3 h-3" />
+                }
+              </button>
+            </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-[#0F172A]">
-            ${Number(product.price).toFixed(2)}
-          </span>
-          <span className="text-xs text-[#94a3b8]">
-            {product.stock} left
-          </span>
-        </div>
+        {/* Scientific provenance */}
+        <div className="px-7 py-7 flex flex-col gap-3 flex-1">
 
-        <Button
-          onClick={() => add(product)}
-          className="w-full bg-[#ef3825] hover:bg-[#17a2b8] text-white font-semibold transition-colors duration-300 rounded-xl shadow-sm shadow-[#ef3825]/20 hover:shadow-[#17a2b8]/20"
-        >
-          <Plus className="w-4 h-4 mr-1.5" />
-          Add to Cart
-        </Button>
-      </CardContent>
-    </Card>
+          {/* Catalog metadata */}
+          <p className="text-[9px] tracking-[0.45em] font-bold text-[#CBD5E1] uppercase">
+            CATALOG {catalogNum} · {categoryTag}
+          </p>
+
+          {/* Exhibition title */}
+          <h3 className="font-serif text-lg font-bold italic text-[#0F172A] leading-snug">
+            {product.name}
+          </h3>
+
+          {/* Description */}
+          {product.description && (
+            <p className="text-[11px] text-[#94A3B8] leading-relaxed mt-0.5">
+              {product.description}
+            </p>
+          )}
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Thin rule */}
+          <div className="h-px bg-slate-200 mt-3" />
+
+          {/* Non-transactional CTA */}
+          <button
+            onClick={() => setInquireOpen(true)}
+            className="self-start flex items-center gap-3 text-[9px] tracking-[0.45em] font-bold text-[#CBD5E1] uppercase hover:text-[#0F172A] transition-colors duration-300 pt-1"
+          >
+            PRIVATE INQUIRY
+            <span className="group-hover:translate-x-0.5 transition-transform duration-300 inline-block">
+              →
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      {/* ── Inquiry modal ── */}
+      <InquireModal
+        product={product}
+        open={inquireOpen}
+        onClose={() => setInquireOpen(false)}
+      />
+
+      {/* ── Admin edit modal ── */}
+      {isAdmin && (
+        <ProductCRUDModal
+          mode="edit"
+          product={product}
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+        />
+      )}
+    </>
   );
 }

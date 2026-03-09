@@ -40,7 +40,7 @@ export async function createCheckoutSession(
     return { error: "This booking has already been paid or cancelled." };
   }
 
-  const service = booking.services as {
+  const service = booking.services as unknown as {
     name: string;
     price: number;
     duration: number;

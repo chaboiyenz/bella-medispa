@@ -88,8 +88,8 @@ _Goal: Sell physical products alongside services._
 
 **Pending (run in Supabase SQL Editor):**
 
-- [ ] Execute `supabase/migrations/003_shop.sql`
-- [ ] Execute `supabase/seed_products.sql`
+- [x] Execute `supabase/migrations/003_shop.sql`
+- [x] Execute `supabase/seed_products.sql`
 
 ---
 
@@ -98,9 +98,15 @@ _Goal: Sell physical products alongside services._
 _Goal: Manage the business without touching code._
 
 - [x] **Admin Middleware:** Server Component layout checks `profiles.role = 'admin'` — `app/admin/layout.tsx`
-- [x] **Booking Dashboard:** Table view with Confirm / Complete / Cancel actions — `app/admin/bookings/page.tsx`
-- [x] **Inventory Manager:** Inline price + stock editing, active toggle — `app/admin/products/page.tsx`
-- [ ] **Email Alerts:** `resend` installed; implementation pending (add `RESEND_API_KEY` to `.env.local`)
+- [x] **Dashboard:** Stats cards (Total Bookings, Pending, Products, Services) + recent bookings — `app/admin/dashboard/page.tsx`
+- [x] **Booking Management:** Table view with Confirm / Complete / Cancel actions — `app/admin/bookings/page.tsx`
+- [x] **Products CRUD:** Inline price + stock editing, active toggle, create form with image upload, delete — `app/admin/products/page.tsx`, `app/admin/products/new/page.tsx`
+- [x] **Services CRUD:** Create / Edit modal, delete, active toggle — `app/admin/services/page.tsx`, `components/admin/ServicesManager.tsx`
+- [x] **Email Alerts:** `lib/email/index.ts` — booking confirmation + admin alert + contact enquiry via Resend. Set `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ADMIN_NOTIFICATION_EMAIL` in `.env.local`.
+
+**Pending (run in Supabase SQL Editor):**
+
+- [ ] Execute `supabase/migrations/008_storage.sql` — creates `product-images` storage bucket for product image uploads
 
 ---
 
@@ -115,8 +121,8 @@ _Goal: Automate customer support._
 
 **Pending (manual steps):**
 
-- [ ] Replace `GROQ_API_KEY=gsk_REPLACE_ME` with your real key from [console.groq.com/keys](https://console.groq.com/keys)
-- [ ] Execute `supabase/migrations/004_faq.sql`
-- [ ] Execute `supabase/seed_faq.sql`
+- [x] Replace `GROQ_API_KEY=gsk_REPLACE_ME` with your real key from [console.groq.com/keys](https://console.groq.com/keys)
+- [x] Execute `supabase/migrations/004_faq.sql`
+- [x] Execute `supabase/seed_faq.sql`
 
 ---

@@ -2,6 +2,16 @@
 @import "tw-animate-css";
 @custom-variant dark (&:is(.dark *));
 
+/* ── Shake animation for invalid-submit feedback ─────────────────────────── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%, 45%, 75% { transform: translateX(-4px); }
+  30%, 60%, 90% { transform: translateX(4px); }
+}
+@utility animate-shake {
+  animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
 /* shadcn/tailwind.css — inlined to avoid CSS export-condition resolution issue */
 @theme inline {
   @keyframes accordion-down {
@@ -89,8 +99,8 @@
   --radius: 0.5rem;
 
   /* Bella MediSpa 2.0 Brand Palette */
-  /* BG: #FFFFFF  Muted: #F8FAFC  Primary: #ef3825  Secondary: #17a2b8 */
-  --background: #FFFFFF;
+  /* BG: #F8FAFC (paper)  White panels: #FFFFFF  Primary: #ef3825  Secondary: #17a2b8 */
+  --background: #F8FAFC;
   --foreground: #0F172A;
   --card: #FFFFFF;
   --card-foreground: #0F172A;

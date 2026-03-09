@@ -16,13 +16,15 @@ export interface CartItem {
 }
 
 interface CartContextValue {
-  items:    CartItem[];
-  count:    number;
-  total:    number;
-  add:      (product: Product) => void;
-  remove:   (productId: string) => void;
-  update:   (productId: string, qty: number) => void;
-  clear:    () => void;
+  items:       CartItem[];
+  count:       number;
+  total:       number;
+  add:         (product: Product) => void;
+  remove:      (productId: string) => void;
+  update:      (productId: string, qty: number) => void;
+  clear:       () => void;
+  cartOpen:    boolean;
+  setCartOpen: (open: boolean) => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -30,8 +32,9 @@ const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "bella-cart";
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems]       = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
 
   // Hydrate from localStorage after mount
   useEffect(() => {
@@ -62,6 +65,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { product, quantity: 1 }];
     });
+    // Auto-open the cart drawer on every add
+    setCartOpen(true);
   }, []);
 
   const remove = useCallback((productId: string) => {
@@ -89,7 +94,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <CartContext.Provider value={{ items, count, total, add, remove, update, clear }}>
+    <CartContext.Provider
+      value={{ items, count, total, add, remove, update, clear, cartOpen, setCartOpen }}
+    >
       {children}
     </CartContext.Provider>
   );

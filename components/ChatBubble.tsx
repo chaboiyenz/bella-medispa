@@ -1,96 +1,134 @@
 "use client";
 
-import { useState, useRef, useEffect, useTransition } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { MessageCircle, X, Send, Loader2, Phone, CalendarDays } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+
+function MdLink({ href, children }: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+  const isExternal = href?.startsWith("http") || href?.startsWith("tel:");
+  return (
+    <a
+      href={href}
+      target={isExternal ? "_blank" : "_self"}
+      rel={isExternal ? "noopener noreferrer" : undefined}
+      className="text-[#ef3825] font-semibold hover:underline"
+    >
+      {children}
+    </a>
+  );
+}
+
+const MD_COMPONENTS = {
+  a: MdLink,
+  p: ({ children }: React.HTMLAttributes<HTMLParagraphElement>) => (
+    <p className="mb-1 last:mb-0">{children}</p>
+  ),
+  em: ({ children }: React.HTMLAttributes<HTMLElement>) => (
+    <em className="not-italic text-[#0F172A]/60 text-[11px]">{children}</em>
+  ),
+} as const;
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  type?: "faq" | "handoff";
 }
 
 const WELCOME: Message = {
   role: "assistant",
+  type: "faq",
   content:
-    "Hi! I'm Bella, your AI Concierge 👋 Ask me anything about our treatments, pricing, or how to book.",
+    "Hi! I'm Bella, your AI Concierge ✨ Ask me anything about our treatments, pricing, or booking.",
 };
+
+const QUICK_ACTIONS = [
+  { label: "HALO Laser price?",    message: "How much does HALO Laser cost?" },
+  { label: "Book a consultation",   message: "How do I book a consultation?" },
+  { label: "What is EMSELLA®?",     message: "What is EMSELLA?" },
+  { label: "Botox downtime?",       message: "How long does Botox last?" },
+  { label: "View treatments",       message: "What anti-aging treatments do you offer?" },
+  { label: "Financing options?",    message: "Do you offer financing or payment plans?" },
+];
 
 export function ChatBubble() {
   const [open, setOpen]         = useState(false);
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput]       = useState("");
-  const [streaming, setStreaming] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef  = useRef<HTMLInputElement>(null);
+  const [loading, setLoading]   = useState(false);
 
-  // Auto-scroll on new content
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef     = useRef<HTMLInputElement>(null);
+  const prevCount    = useRef(messages.length);
+
+  // ── Scroll to bottom only when a new message arrives ──────────────────────
+  // This allows the user to freely scroll up through clinical advice without
+  // the window snapping back on every render.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streaming]);
+    const container = containerRef.current;
+    if (!container) return;
+    if (messages.length > prevCount.current) {
+      container.scrollTop = container.scrollHeight;
+    }
+    prevCount.current = messages.length;
+  }, [messages.length]);
 
-  // Focus input when opened
+  // Also scroll when loading starts (shows typing indicator at bottom)
+  useEffect(() => {
+    if (loading) {
+      const container = containerRef.current;
+      if (container) container.scrollTop = container.scrollHeight;
+    }
+  }, [loading]);
+
+  // Focus input when chat opens
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 150);
   }, [open]);
 
-  const send = async () => {
-    const text = input.trim();
-    if (!text || streaming) return;
+  const send = async (text?: string) => {
+    const query = (text ?? input).trim();
+    if (!query || loading) return;
 
-    const userMsg: Message = { role: "user", content: text };
+    const userMsg: Message = { role: "user", content: query };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    setStreaming(true);
-
-    // Placeholder for streaming response
-    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+    setLoading(true);
 
     try {
       const res = await fetch("/api/chat", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          messages: [...messages, userMsg].map(({ role, content }) => ({ role, content })),
-        }),
+        body:    JSON.stringify({ message: query }),
       });
 
-      if (!res.ok || !res.body) throw new Error("API error");
+      const data = (await res.json()) as { type: "faq" | "handoff"; answer: string | null };
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        accumulated += decoder.decode(value, { stream: true });
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { role: "assistant", content: accumulated };
-          return updated;
-        });
-      }
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", type: data.type, content: data.answer ?? "" },
+      ]);
     } catch {
-      setMessages((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = {
-          role: "assistant",
-          content: "Sorry, I couldn't connect. Please call us at +1 302-736-6334.",
-        };
-        return updated;
-      });
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", type: "handoff", content: "" },
+      ]);
     } finally {
-      setStreaming(false);
+      setLoading(false);
     }
   };
 
   return (
     <>
-      {/* Chat panel */}
+      {/* ── Chat panel ─────────────────────────────────────────── */}
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[340px] sm:w-[380px] flex flex-col bg-white/95 backdrop-blur-xl border border-white/40 rounded-3xl shadow-2xl shadow-slate-400/20 overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center gap-3 px-5 py-4 bg-[#0F172A]">
+        <div
+          suppressHydrationWarning
+          className="fixed bottom-24 right-6 z-50 w-[340px] sm:w-[380px] flex flex-col bg-white border border-slate-100 rounded-3xl shadow-2xl shadow-slate-400/20 overflow-hidden"
+        >
+          {/* ── Header ── */}
+          <div className="flex items-center gap-3 px-5 py-4 bg-[#0F172A] shrink-0">
             <div className="relative">
               <Image
                 src="/bella.jpg"
@@ -99,22 +137,27 @@ export function ChatBubble() {
                 height={36}
                 className="rounded-full object-cover ring-2 ring-[#17a2b8]/40"
               />
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#0F172A]" />
+              {/* Online indicator */}
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#17a2b8] border-2 border-[#0F172A]" />
             </div>
             <div>
               <p className="text-sm font-semibold text-white">Bella AI Concierge</p>
-              <p className="text-[10px] text-white/40">Powered by Groq · Llama 3</p>
+              <p className="text-[10px] text-[#17a2b8]">Bella MediSpa · Dover, DE</p>
             </div>
             <button
               onClick={() => setOpen(false)}
+              aria-label="Close chat"
               className="ml-auto text-white/40 hover:text-white transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 max-h-[380px] no-scrollbar">
+          {/* ── Messages — scrollable, free to review ── */}
+          <div
+            ref={containerRef}
+            className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 max-h-[340px]"
+          >
             {messages.map((msg, i) => (
               <div
                 key={i}
@@ -129,43 +172,86 @@ export function ChatBubble() {
                     className="rounded-full object-cover shrink-0 mt-0.5"
                   />
                 )}
-                <div
-                  className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "bg-[#ef3825] text-white rounded-tr-sm"
-                      : "bg-[#F8FAFC] text-[#0F172A] rounded-tl-sm border border-[#F1F5F9]"
-                  }`}
-                >
-                  {msg.content || (
-                    <span className="flex gap-1 items-center h-4">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#64748B] animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#64748B] animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#64748B] animate-bounce" style={{ animationDelay: "300ms" }} />
-                    </span>
-                  )}
-                </div>
+
+                {msg.type === "handoff" ? (
+                  /* ── Clinical Handoff ── */
+                  <div className="max-w-[85%] bg-slate-100 text-[#0F172A] rounded-2xl rounded-tl-sm px-4 py-3 flex flex-col gap-3">
+                    <p className="text-sm leading-relaxed">
+                      I want to ensure you get the most accurate medical advice. That specific question is best answered by our specialists.
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <Link
+                        href="/book"
+                        className="flex items-center justify-center gap-2 text-xs font-semibold py-2.5 rounded-xl bg-[#ef3825] text-white hover:bg-[#d42f1d] transition-colors"
+                      >
+                        <CalendarDays className="w-3.5 h-3.5" />
+                        Book a Consultation
+                      </Link>
+                      <a
+                        href="tel:+13027366334"
+                        className="flex items-center justify-center gap-2 text-xs font-semibold py-2.5 rounded-xl bg-[#0F172A]/8 text-[#0F172A] hover:bg-[#0F172A]/12 border border-[#0F172A]/10 transition-colors"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                        Call +1 302-736-6334
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  /* ── Regular bubble ── */
+                  <div
+                    className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                      msg.role === "user"
+                        ? "bg-[#17a2b8] text-white rounded-tr-sm"
+                        : "bg-slate-100 text-[#0F172A] rounded-tl-sm"
+                    }`}
+                  >
+                    {msg.role === "assistant" ? (
+                      <ReactMarkdown components={MD_COMPONENTS}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      msg.content
+                    )}
+                  </div>
+                )}
               </div>
             ))}
-            <div ref={bottomRef} />
+
+            {/* Typing indicator */}
+            {loading && (
+              <div className="flex gap-2">
+                <Image
+                  src="/bella.jpg"
+                  alt="Bella"
+                  width={24}
+                  height={24}
+                  className="rounded-full object-cover shrink-0 mt-0.5"
+                />
+                <div className="bg-slate-100 rounded-2xl rounded-tl-sm px-3.5 py-3 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Suggested questions */}
-          {messages.length === 1 && (
-            <div className="px-4 pb-3 flex flex-wrap gap-1.5">
-              {["HALO Laser price?", "Book a consult", "Botox downtime?"].map((q) => (
-                <button
-                  key={q}
-                  onClick={() => { setInput(q); inputRef.current?.focus(); }}
-                  className="text-xs px-3 py-1.5 rounded-full border border-[#17a2b8]/30 text-[#17a2b8] hover:bg-[#17a2b8]/10 transition-colors"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* ── Quick actions — always visible, horizontal carousel ── */}
+          <div className="px-4 pt-2 pb-1 flex gap-1.5 overflow-x-auto border-t border-slate-100 shrink-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {QUICK_ACTIONS.map(({ label, message }) => (
+              <button
+                key={label}
+                onClick={() => send(message)}
+                disabled={loading}
+                className="text-xs px-3 py-1.5 rounded-full border border-[#17a2b8]/30 text-[#17a2b8] hover:bg-[#17a2b8]/10 transition-colors whitespace-nowrap shrink-0 disabled:opacity-40"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-          {/* Input */}
-          <div className="px-4 py-3 border-t border-[#F1F5F9] flex items-center gap-2">
+          {/* ── Input ── */}
+          <div className="px-4 py-3 flex items-center gap-2 shrink-0">
             <input
               ref={inputRef}
               type="text"
@@ -173,28 +259,30 @@ export function ChatBubble() {
               placeholder="Ask anything…"
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
-              className="flex-1 text-sm bg-[#F8FAFC] border border-[#F1F5F9] rounded-xl px-3 py-2 text-[#0F172A] placeholder:text-[#CBD5E1] focus:outline-none focus:border-[#17a2b8] transition-colors"
+              className="flex-1 text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[#0F172A] placeholder:text-slate-300 focus:outline-none focus:border-[#17a2b8] focus:ring-2 focus:ring-[#17a2b8]/15 transition-all"
             />
             <button
-              onClick={send}
-              disabled={!input.trim() || streaming}
-              className="w-9 h-9 rounded-xl bg-[#ef3825] hover:bg-[#17a2b8] text-white flex items-center justify-center transition-colors disabled:opacity-40"
+              onClick={() => send()}
+              disabled={!input.trim() || loading}
+              className="w-9 h-9 rounded-xl bg-[#17a2b8] hover:bg-[#138fa5] text-white flex items-center justify-center transition-colors disabled:opacity-40 shrink-0"
             >
-              {streaming ? (
+              {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Send className="w-4 h-4" />
               )}
             </button>
           </div>
+
         </div>
       )}
 
-      {/* Floating button */}
+      {/* ── Floating trigger ────────────────────────────────────── */}
       <button
+        suppressHydrationWarning
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close chat" : "Open AI chat assistant"}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#17a2b8] text-white shadow-xl hover:bg-[#138fa5] hover:scale-110 transition-all duration-200 flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#17a2b8] text-white shadow-xl shadow-[#17a2b8]/30 hover:bg-[#138fa5] hover:scale-110 transition-all duration-200 flex items-center justify-center"
       >
         {open ? <X className="w-5 h-5" /> : <MessageCircle className="w-6 h-6" />}
       </button>

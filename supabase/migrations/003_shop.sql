@@ -1,6 +1,7 @@
 -- ============================================================
 -- Bella MediSpa 2.0 — Block 4: Products & Orders Schema
 -- Run AFTER 002_functions.sql
+-- Re-runnable: safe to execute multiple times (idempotent)
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS products (
@@ -40,21 +41,25 @@ ALTER TABLE orders      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 
 -- Products — public read, admin write
-CREATE POLICY "products: public read active"  ON products FOR SELECT USING (is_active = TRUE);
-CREATE POLICY "products: admin manage"        ON products USING (
-  EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin')
-);
+DROP POLICY IF EXISTS "products: public read active" ON products;
+DROP POLICY IF EXISTS "products: admin manage"       ON products;
+
+CREATE POLICY "products: public read active" ON products FOR SELECT USING (is_active = TRUE);
+CREATE POLICY "products: admin manage"       ON products USING (is_admin());
 
 -- Orders — clients read own, admin read all
-CREATE POLICY "orders: client reads own"  ON orders FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "orders: client creates"    ON orders FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "orders: admin manages"     ON orders USING (
-  EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin')
-);
+DROP POLICY IF EXISTS "orders: client reads own" ON orders;
+DROP POLICY IF EXISTS "orders: client creates"   ON orders;
+DROP POLICY IF EXISTS "orders: admin manages"    ON orders;
 
-CREATE POLICY "order_items: via order"  ON order_items FOR SELECT USING (
+CREATE POLICY "orders: client reads own" ON orders FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "orders: client creates"   ON orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "orders: admin manages"    ON orders USING (is_admin());
+
+DROP POLICY IF EXISTS "order_items: via order" ON order_items;
+DROP POLICY IF EXISTS "order_items: admin"     ON order_items;
+
+CREATE POLICY "order_items: via order" ON order_items FOR SELECT USING (
   EXISTS (SELECT 1 FROM orders o WHERE o.id = order_id AND o.user_id = auth.uid())
 );
-CREATE POLICY "order_items: admin"      ON order_items USING (
-  EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin')
-);
+CREATE POLICY "order_items: admin" ON order_items USING (is_admin());

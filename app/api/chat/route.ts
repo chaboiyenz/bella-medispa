@@ -1,77 +1,105 @@
 import { NextRequest } from "next/server";
-import Groq from "groq-sdk";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types";
 
 export const runtime = "nodejs";
 
-const SYSTEM_PROMPT_BASE = `You are the AI Concierge for Bella MediSpa — a premium aesthetic clinic in Dover, Delaware.
+// ── Fuzzy keyword matcher ─────────────────────────────────────────────────────
+const STOP_WORDS = new Set([
+  "what", "is", "are", "does", "do", "how", "can", "the", "a", "an",
+  "my", "your", "i", "me", "we", "you", "it", "in", "at", "on", "for",
+  "to", "of", "be", "will", "would", "should", "could", "has", "have",
+  "had", "much", "many", "any", "all", "some", "that", "this", "there",
+  "about", "get", "tell", "know", "which", "who", "and", "or", "not",
+  "with", "from", "by", "as", "up", "out", "into", "just", "like",
+]);
 
-RULES:
-- Answer ONLY using the FAQ knowledge base provided below.
-- Be warm, professional, and concise (2–4 sentences max per reply).
-- Always recommend booking a free consultation for complex questions.
-- If a question is outside the FAQ context, say: "For more details, call us at +1 302-736-6334 or book a free consultation at bellamedispa.com/book."
-- NEVER invent medical advice or prices not listed in the FAQ.
-- Do not discuss competitors.
+const MATCH_THRESHOLD = 0.5;
 
-KNOWLEDGE BASE:
-`;
+function keyTokens(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 1 && !STOP_WORDS.has(w));
+}
 
+function matchScore(userQuery: string, faqQuestion: string): number {
+  const querySet  = new Set(keyTokens(userQuery));
+  const faqTokens = keyTokens(faqQuestion);
+  if (faqTokens.length === 0) return 0;
+  const matched = faqTokens.filter((t) => querySet.has(t)).length;
+  return matched / faqTokens.length;
+}
+
+// ── "Next Step" CTAs by category ─────────────────────────────────────────────
+// These are appended to every matched answer to keep the patient engaged.
+const NEXT_STEP: Record<string, string> = {
+  Pricing:    "\n\n*Would you like to [Book Online 24/7](https://bellamedispa.com/book) to get an exact quote?*",
+  Treatments: "\n\n*Interested in this treatment? [Book Online 24/7](https://bellamedispa.com/book) or [view all treatments →](/treatments).*",
+  Booking:    "\n\n*[Book Online 24/7](https://bellamedispa.com/book) or [follow us on Instagram](https://www.instagram.com/bella_medispa_/?hl=en) for the latest updates.*",
+  Recovery:   "\n\n*Have more recovery questions? [Book a free consultation →](https://bellamedispa.com/book) with our team.*",
+  Safety:     "\n\n*Your safety is our priority. [Book a complimentary consultation →](https://bellamedispa.com/book) or call us at [+1 302-736-6334](tel:+13027366334).*",
+};
+const DEFAULT_NEXT_STEP =
+  "\n\n*Ready to take the next step? [Book Online 24/7](https://bellamedispa.com/book) or [follow us on Instagram](https://www.instagram.com/bella_medispa_/?hl=en) for inspiration.*";
+
+// ── Response types ────────────────────────────────────────────────────────────
+export type ChatResponse =
+  | { type: "faq";     answer: string }
+  | { type: "handoff"; answer: null };
+
+// ── Route handler ─────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
-    const { messages } = (await req.json()) as {
-      messages: { role: "user" | "assistant"; content: string }[];
-    };
+    const { message } = (await req.json()) as { message: string };
 
-    // Fetch FAQ context from Supabase (anon key — publicly readable)
+    if (!message?.trim()) {
+      return Response.json({ type: "handoff", answer: null } satisfies ChatResponse);
+    }
+
     const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    const { data: faq } = await supabase
-      .from("faq_kb")
-      .select("topic, content")
-      .order("topic");
+    const { data: faqs } = await supabase
+      .from("faqs")
+      .select("id, question, answer, category")
+      .eq("is_active", true);
 
-    const context = faq?.map((f) => `[${f.topic}]: ${f.content}`).join("\n\n") ?? "";
-    const systemPrompt = SYSTEM_PROMPT_BASE + (context || "No FAQ data loaded yet.");
+    if (!faqs?.length) {
+      return Response.json({ type: "handoff", answer: null } satisfies ChatResponse);
+    }
 
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
+    // Score every active FAQ and find the best match
+    let bestScore  = 0;
+    let bestFaqId  = "";
+    let bestAnswer = "";
+    let bestCat: string | null = null;
 
-    const stream = await groq.chat.completions.create({
-      model:       "llama-3.3-70b-versatile",
-      max_tokens:  512,
-      temperature: 0.4,
-      stream:      true,
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...messages,
-      ],
-    });
+    for (const faq of faqs) {
+      const score = matchScore(message, faq.question);
+      if (score > bestScore) {
+        bestScore  = score;
+        bestFaqId  = faq.id;
+        bestAnswer = faq.answer;
+        bestCat    = faq.category;
+      }
+    }
 
-    // Stream the response back as plain text chunks
-    const encoder = new TextEncoder();
-    const readable = new ReadableStream({
-      async start(controller) {
-        for await (const chunk of stream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-        controller.close();
-      },
-    });
+    if (bestScore >= MATCH_THRESHOLD) {
+      supabase.rpc("increment_faq_usage", { faq_id: bestFaqId }).then(() => {});
 
-    return new Response(readable, {
-      headers: {
-        "Content-Type":  "text/plain; charset=utf-8",
-        "Cache-Control": "no-cache",
-        "X-Accel-Buffering": "no",
-      },
-    });
+      const nextStep = (bestCat && NEXT_STEP[bestCat]) ?? DEFAULT_NEXT_STEP;
+      const fullAnswer = bestAnswer + nextStep;
+
+      return Response.json({ type: "faq", answer: fullAnswer } satisfies ChatResponse);
+    }
+
+    return Response.json({ type: "handoff", answer: null } satisfies ChatResponse);
   } catch (err) {
     console.error("Chat API error:", err);
-    return new Response("Service temporarily unavailable.", { status: 500 });
+    return Response.json({ type: "handoff", answer: null } satisfies ChatResponse, { status: 500 });
   }
 }

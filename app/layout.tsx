@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
-import { CartProvider } from "@/lib/context/CartContext";
+import { GlobalShell } from "@/components/GlobalShell";
+import { AdminModeProvider } from "@/lib/context/AdminModeContext";
+import { getAdminStatus } from "@/lib/auth";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -24,8 +26,11 @@ export const metadata: Metadata = {
     "Bella MediSpa offers premium aesthetic treatments — facials, microneedling, laser, and more. Book your appointment online today.",
   keywords: ["medispa", "aesthetics", "facial", "microneedling", "laser", "beauty"],
   icons: {
-    icon: "/bella.jpg",
-    apple: "/bella.jpg",
+    icon: [
+      { url: "/bella-icon.png", type: "image/png" },
+    ],
+    apple: "/bella-icon.png",
+    shortcut: "/bella-icon.png",
   },
   openGraph: {
     type: "website",
@@ -37,18 +42,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  const isAdmin = await getAdminStatus();
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${playfair.variable} ${inter.variable} antialiased`} suppressHydrationWarning>
-        <CartProvider>
+    <html lang="en" suppressHydrationWarning={true}>
+      <body className={`${playfair.variable} ${inter.className}`} suppressHydrationWarning={true}>
+        <AdminModeProvider isAdmin={isAdmin}>
           <Navbar />
-          {children}
-        </CartProvider>
+          <GlobalShell>{children}</GlobalShell>
+        </AdminModeProvider>
       </body>
     </html>
   );

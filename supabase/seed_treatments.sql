@@ -1,6 +1,7 @@
 -- =============================================
 -- Treatment Detail Pages — Seed Data
 -- Run AFTER 005_treatments.sql
+-- Re-runnable: ON CONFLICT (slug) DO UPDATE SET keeps rows fresh.
 -- =============================================
 
 INSERT INTO treatment_details (
@@ -130,4 +131,16 @@ INSERT INTO treatment_details (
 
   'Expert age spot treatments in Dover, DE at Bella MediSpa — including BBL laser, HALO fractional resurfacing, cryotherapy, and medical-grade peels. Book a clinical consultation today.'
 
-) ON CONFLICT (slug) DO NOTHING;
+) ON CONFLICT (slug) DO UPDATE SET
+  name               = EXCLUDED.name,
+  category           = EXCLUDED.category,
+  breadcrumb         = EXCLUDED.breadcrumb,
+  overview           = EXCLUDED.overview,
+  image_url          = EXCLUDED.image_url,
+  causes             = EXCLUDED.causes,
+  warning_signs      = EXCLUDED.warning_signs,
+  treatments         = EXCLUDED.treatments,
+  warning_box        = EXCLUDED.warning_box,
+  clinical_resources = EXCLUDED.clinical_resources,
+  meta_description   = EXCLUDED.meta_description,
+  is_active          = EXCLUDED.is_active;

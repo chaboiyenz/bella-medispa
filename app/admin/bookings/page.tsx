@@ -49,8 +49,8 @@ export default async function AdminBookingsPage() {
             </thead>
             <tbody className="divide-y divide-white/5">
               {bookings.map((b) => {
-                const profile = b.profiles as { full_name: string | null; email: string | null; phone: string | null } | null;
-                const service = b.services as { name: string; price: number; duration: number } | null;
+                const profile = b.profiles as unknown as { full_name: string | null; email: string | null; phone: string | null } | null;
+                const service = b.services as unknown as { name: string; price: number; duration: number } | null;
                 const start   = new Date(b.slot_start);
                 const dateStr = start.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
                 const timeStr = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });

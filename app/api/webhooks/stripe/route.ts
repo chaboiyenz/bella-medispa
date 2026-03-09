@@ -2,6 +2,10 @@ import { headers } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 import type { Database } from "@/types";
+import {
+  sendBookingConfirmation,
+  sendAdminNotification,
+} from "@/lib/email";
 
 // Raw body is required for Stripe signature verification — disable body parsing
 export const runtime = "nodejs";
@@ -64,6 +68,49 @@ export async function POST(request: Request) {
       }
 
       console.log(`Booking ${bookingId} confirmed via Stripe session ${session.id}`);
+
+      // ── Send emails (non-critical — never fail the webhook response) ──────
+      try {
+        const { data: booking } = await supabase
+          .from("bookings")
+          .select("slot_start, slot_end, services(name, price), profiles(full_name, email)")
+          .eq("id", bookingId)
+          .single();
+
+        if (booking) {
+          const svc     = booking.services  as unknown as { name: string; price: number } | null;
+          const profile = booking.profiles  as unknown as { full_name: string | null; email: string | null } | null;
+          const clientEmail = profile?.email        ?? session.customer_email ?? null;
+          const clientName  = profile?.full_name    ?? "Valued Client";
+          const serviceName = svc?.name             ?? "Treatment";
+          const price       = svc?.price            ?? 0;
+
+          if (clientEmail) {
+            await sendBookingConfirmation({
+              to:          clientEmail,
+              clientName,
+              serviceName,
+              price,
+              slotStart:   booking.slot_start,
+              slotEnd:     booking.slot_end,
+              bookingId,
+            });
+          }
+
+          await sendAdminNotification({
+            clientName,
+            clientEmail: clientEmail ?? "",
+            serviceName,
+            price,
+            slotStart:   booking.slot_start,
+            bookingId,
+          });
+        }
+      } catch (emailErr) {
+        // Log but do not propagate — Stripe must receive 200 regardless
+        console.error("Email dispatch failed (non-critical):", emailErr);
+      }
+
       break;
     }
 
