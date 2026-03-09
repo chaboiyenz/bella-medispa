@@ -1,56 +1,59 @@
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr"
+import { NextResponse, type NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const response = NextResponse.next()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll();
+        get(name: string) {
+          return request.cookies.get(name)?.value
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
+        set(name: string, value: string, options) {
+          response.cookies.set(name, value, options)
+        },
+        remove(name: string, options) {
+          response.cookies.set(name, "", { ...options, maxAge: 0 })
         },
       },
     }
-  );
+  )
 
-  // Refresh the session token on every request
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
-  // Protect /admin — must be logged in and have admin role
+  // Protect only admin routes
   if (request.nextUrl.pathname.startsWith("/admin")) {
+
     if (!user) {
-      return NextResponse.redirect(new URL("/auth/login?next=" + encodeURIComponent(request.nextUrl.pathname), request.url));
+      return NextResponse.redirect(
+        new URL(`/auth/login?next=${encodeURIComponent(request.nextUrl.pathname)}`, request.url)
+      )
     }
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    if (!profile || profile.role !== "admin") {
-      return NextResponse.redirect(new URL("/", request.url));
+
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single()
+
+      if (!profile || profile.role !== "admin") {
+        return NextResponse.redirect(new URL("/", request.url))
+      }
+
+    } catch {
+      return NextResponse.redirect(new URL("/", request.url))
     }
   }
 
-  return response;
+  return response
 }
 
 export const config = {
-  matcher: [
-    // Run on all routes except static assets, _next internals, and favicon
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-};
+  matcher: ["/admin/:path*"],
+}
