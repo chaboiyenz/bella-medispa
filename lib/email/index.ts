@@ -13,7 +13,7 @@ const ADMIN  = process.env.ADMIN_NOTIFICATION_EMAIL
 // ── Public send functions ─────────────────────────────────────────────────────
 
 /**
- * Sends a booking confirmation to the client after Stripe checkout completes.
+ * Sends a booking confirmation to the client when a booking is confirmed.
  */
 export async function sendBookingConfirmation(params: {
   to:          string;
@@ -197,7 +197,7 @@ function adminNotificationHtml(p: {
       New Booking Confirmed
     </h2>
     <p style="margin:0 0 24px;color:${C.slate};font-size:14px;">
-      A new appointment has been paid and confirmed via Stripe.
+      A new appointment has been confirmed.
     </p>
 
     <div style="background:${C.light};border-radius:12px;padding:20px 24px;">

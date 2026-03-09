@@ -11,23 +11,17 @@ export async function getActiveProducts(): Promise<{
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
-      .select("*")
+      .select("id, name, description, price, image_url, stock, category, is_active, created_at, stripe_price_id")
       .eq("is_active", true)
       // stock > 0 removed: let RLS + is_active be the single source of truth.
       // Seeded rows with stock = 0 were silently excluded by this filter.
       .order("category")
       .order("name");
 
-    if (error) {
-      console.error("[getActiveProducts] Supabase error:", error.code, error.message, error.hint);
-      return { products: [], error: error.message };
-    }
-
-    console.log(`[getActiveProducts] fetched ${data?.length ?? 0} products`);
+    if (error) return { products: [], error: error.message };
     return { products: data ?? [], error: null };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
-    console.error("[getActiveProducts] Unexpected error:", msg);
     return { products: [], error: msg };
   }
 }

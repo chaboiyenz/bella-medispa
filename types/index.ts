@@ -82,13 +82,6 @@ export type TeamMember = {
   updated_at: string;
 };
 
-export type FaqKb = {
-  id: string;
-  content: string;
-  embedding: number[] | null; // pgvector (legacy)
-  created_at: string;
-};
-
 export type Faq = {
   id: string;
   question: string;
@@ -174,12 +167,6 @@ export interface Database {
         Row: Order;
         Insert: Omit<Order, "id" | "created_at">;
         Update: Partial<Omit<Order, "id" | "created_at">>;
-        Relationships: [];
-      };
-      faq_kb: {
-        Row: FaqKb;
-        Insert: Omit<FaqKb, "id" | "created_at">;
-        Update: Partial<Omit<FaqKb, "id" | "created_at">>;
         Relationships: [];
       };
       faqs: {

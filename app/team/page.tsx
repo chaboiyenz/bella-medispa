@@ -23,7 +23,8 @@ export const metadata: Metadata = {
 function TeamCard({ member, index }: { member: TeamMember; index: number }) {
   return (
     // Named group so admin hover overlay doesn't conflict with card group effects
-    <div className="relative group/admin">
+    // suppressHydrationWarning: browser extensions (Grammarly, etc.) can inject attributes and cause mismatch
+    <div className="relative group/admin" suppressHydrationWarning>
       <article
         className="
           group relative flex flex-col rounded-3xl overflow-hidden
@@ -35,6 +36,7 @@ function TeamCard({ member, index }: { member: TeamMember; index: number }) {
           animationDelay:    `${index * 120}ms`,
           animationDuration: "700ms",
         }}
+        suppressHydrationWarning
       >
         {/* Portrait */}
         <div className="relative aspect-3/4 overflow-hidden bg-slate-50">
@@ -110,8 +112,8 @@ function TeamCard({ member, index }: { member: TeamMember; index: number }) {
             </ul>
           )}
 
-          {/* Book CTA */}
-          <div className="mt-auto pt-3">
+          {/* Book CTA — suppressHydrationWarning: extensions may inject attributes on links */}
+          <div className="mt-auto pt-3" suppressHydrationWarning>
             <Link
               href={`/book?provider=${member.id}`}
               className="
@@ -122,6 +124,7 @@ function TeamCard({ member, index }: { member: TeamMember; index: number }) {
                 transition-colors duration-300
                 shadow-sm shadow-[#ef3825]/30 hover:shadow-[#17a2b8]/30
               "
+              suppressHydrationWarning
             >
               Schedule with {member.name.split(" ")[0]}
             </Link>
@@ -142,16 +145,17 @@ export default async function TeamPage() {
   const { members, error } = await getTeamMembers();
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white" suppressHydrationWarning>
 
       {/* Hero */}
-      <section className="pt-28 pb-14 px-6 bg-white">
-        <div className="max-w-5xl mx-auto">
+      <section className="pt-28 pb-14 px-6 bg-white" suppressHydrationWarning>
+        <div className="max-w-5xl mx-auto" suppressHydrationWarning>
 
-          {/* Breadcrumb */}
+          {/* Breadcrumb — extensions may inject attributes on links */}
           <nav
             aria-label="Breadcrumb"
             className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 text-xs text-[#64748B] mb-8 shadow-sm"
+            suppressHydrationWarning
           >
             <Link href="/" className="hover:text-[#17a2b8] transition-colors">Home</Link>
             <span aria-hidden className="text-slate-300">/</span>
@@ -180,8 +184,8 @@ export default async function TeamPage() {
       </section>
 
       {/* Provider Grid */}
-      <section className="pb-32 px-6" aria-label="Provider profiles">
-        <div className="max-w-6xl mx-auto">
+      <section className="pb-32 px-6" aria-label="Provider profiles" suppressHydrationWarning>
+        <div className="max-w-6xl mx-auto" suppressHydrationWarning>
 
           {/* Admin bar — client component, invisible to non-admins */}
           <TeamAdminBar />

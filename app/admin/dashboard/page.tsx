@@ -18,10 +18,10 @@ export default async function AdminDashboardPage() {
     { count: totalProducts },
     { count: totalServices },
   ] = await Promise.all([
-    supabase.from("bookings").select("*", { count: "exact", head: true }),
-    supabase.from("bookings").select("*", { count: "exact", head: true }).eq("status", "pending"),
-    supabase.from("products").select("*", { count: "exact", head: true }),
-    supabase.from("services").select("*", { count: "exact", head: true }),
+    supabase.from("bookings").select("id", { count: "exact", head: true }),
+    supabase.from("bookings").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("products").select("id", { count: "exact", head: true }),
+    supabase.from("services").select("id", { count: "exact", head: true }),
   ]);
 
   const { data: recentBookings } = await supabase

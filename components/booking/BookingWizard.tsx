@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getBookedSlots, createBooking } from "@/lib/actions/booking";
-import { createCheckoutSession } from "@/lib/actions/checkout";
 import type { Service } from "@/types";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -224,8 +223,9 @@ function DateTimeStep({
     setSlotsError("");
     onTime("");
     try {
-      const slots = await getBookedSlots(d);
-      setBookedSlots(slots);
+      const { data, error } = await getBookedSlots(d);
+      setBookedSlots(data);
+      if (error) setSlotsError(error);
     } catch {
       setSlotsError("Could not load availability. Please try again.");
     } finally {
@@ -382,17 +382,17 @@ function DetailsStep({
   );
 }
 
-// ── Step 4: Review & Pay ──────────────────────────────────────
+// ── Step 4: Review & Confirm ────────────────────────────────────
 function ConfirmStep({
   state,
-  onPay,
-  isPaying,
-  payError,
+  onConfirm,
+  isConfirming,
+  confirmError,
 }: {
   state: WizardState;
-  onPay: () => void;
-  isPaying: boolean;
-  payError: string;
+  onConfirm: () => void;
+  isConfirming: boolean;
+  confirmError: string;
 }) {
   const slotDate  = new Date(`${state.date}T${state.time}:00`);
   const slotEnd   = new Date(slotDate.getTime() + state.service!.duration * 60_000);
@@ -403,10 +403,10 @@ function ConfirmStep({
     <div className="flex flex-col items-center gap-6 text-center">
       <div>
         <h2 className="font-serif text-2xl font-semibold text-[#0F172A]">
-          Review &amp; Pay
+          Review &amp; Confirm
         </h2>
         <p className="text-sm text-[#64748B] mt-1 max-w-sm">
-          Your slot is held. Complete payment to confirm your appointment.
+          Confirm your booking request. Our team will reach out to confirm your appointment.
         </p>
       </div>
 
@@ -446,31 +446,31 @@ function ConfirmStep({
         ))}
       </div>
 
-      {/* Pay error */}
-      {payError && (
+      {/* Error */}
+      {confirmError && (
         <div className="w-full text-sm text-[#ef3825] bg-[#ef3825]/8 border border-[#ef3825]/20 rounded-xl px-4 py-3 text-center">
-          {payError}
+          {confirmError}
         </div>
       )}
 
-      {/* Pay button */}
+      {/* Confirm button */}
       <Button
-        onClick={onPay}
-        disabled={isPaying}
+        onClick={onConfirm}
+        disabled={isConfirming}
         className="w-full h-12 bg-[#ef3825] hover:bg-[#17a2b8] text-white font-semibold rounded-full text-base transition-colors duration-300 shadow-md shadow-[#ef3825]/20"
       >
-        {isPaying ? (
+        {isConfirming ? (
           <Loader2 className="w-5 h-5 animate-spin" />
         ) : (
           <>
-            Pay ${Number(state.service!.price).toLocaleString()} — Secure Checkout
+            Confirm Booking Request
             <ArrowRight className="w-4 h-4 ml-2" />
           </>
         )}
       </Button>
 
       <p className="text-xs text-[#94a3b8]">
-        Powered by Stripe · Booking ID:{" "}
+        Booking ID:{" "}
         <code className="font-mono">{state.bookingId.slice(0, 8).toUpperCase()}</code>
       </p>
     </div>
@@ -492,9 +492,9 @@ export function BookingWizard({
   const [step, setStep]       = useState<Step>(initial ? "datetime" : "service");
   const [state, setState]     = useState<WizardState>({ ...INITIAL, service: initial });
   const [submitError, setSubmitError] = useState("");
-  const [payError, setPayError]       = useState("");
+  const [confirmError, setConfirmError] = useState("");
   const [isPending, startTransition]  = useTransition();
-  const [isPaying,  startPayTransition] = useTransition();
+  const [isConfirming, startConfirmTransition] = useTransition();
 
   const update = <K extends keyof WizardState>(field: K, value: WizardState[K]) =>
     setState((prev) => ({ ...prev, [field]: value }));
@@ -587,17 +587,12 @@ export function BookingWizard({
           {step === "confirm" && (
             <ConfirmStep
               state={state}
-              isPaying={isPaying}
-              payError={payError}
-              onPay={() => {
-                setPayError("");
-                startPayTransition(async () => {
-                  const result = await createCheckoutSession(state.bookingId);
-                  if (result.error) {
-                    setPayError(result.error);
-                    return;
-                  }
-                  window.location.assign(result.url!);
+              isConfirming={isConfirming}
+              confirmError={confirmError}
+              onConfirm={() => {
+                setConfirmError("");
+                startConfirmTransition(() => {
+                  window.location.href = `/book/success?booking_id=${state.bookingId}`;
                 });
               }}
             />

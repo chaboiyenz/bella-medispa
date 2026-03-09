@@ -1,13 +1,14 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { toggleProductActive, updateProduct, deleteProduct } from "@/lib/actions/admin";
 import Link from "next/link";
+import { Plus, Trash2 } from "lucide-react";
 
 export default async function AdminProductsPage() {
   const supabase = await createAdminClient();
 
   const { data: products } = await supabase
     .from("products")
-    .select("*")
+    .select("id, name, description, price, stock, category, is_active")
     .order("category")
     .order("name");
 
@@ -24,9 +25,11 @@ export default async function AdminProductsPage() {
         </div>
         <Link
           href="/admin/products/new"
-          className="text-sm px-4 py-2 rounded-xl bg-[#ef3825] text-white font-semibold hover:bg-[#d42f1d] transition-colors"
+          className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-xl bg-[#ef3825] text-white font-semibold hover:bg-[#d42f1d] transition-colors"
+          title="Add product"
         >
-          + New Product
+          <Plus className="w-4 h-4" />
+          Add Product
         </Link>
       </div>
 
@@ -129,8 +132,10 @@ export default async function AdminProductsPage() {
                     }}>
                       <button
                         type="submit"
-                        className="text-xs px-3 py-1.5 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors"
+                        title="Delete product"
+                        className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors"
                       >
+                        <Trash2 className="w-3.5 h-3.5" />
                         Delete
                       </button>
                     </form>

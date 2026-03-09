@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ShoppingBag, Minus, Plus, Trash2, ArrowRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -139,14 +140,16 @@ export function CartDrawer() {
               </span>
             </div>
             <p className="text-xs text-[#94a3b8]">
-              Shipping & tax calculated at checkout.
+              Products are for display. Contact us for inquiries.
             </p>
             <Button
+              asChild
               className="w-full bg-[#ef3825] hover:bg-[#17a2b8] text-white font-semibold rounded-full transition-colors duration-300"
-              onClick={() => alert("Stripe checkout coming in next release!")}
             >
-              Checkout
-              <ArrowRight className="w-4 h-4 ml-2" />
+              <Link href="/#contact">
+                Contact Us
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
             </Button>
           </div>
         )}

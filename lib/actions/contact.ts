@@ -25,7 +25,6 @@ export async function submitContactForm(
     return { success: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed to send message.";
-    console.error("[submitContactForm]", msg);
     return { success: false, error: msg };
   }
 }

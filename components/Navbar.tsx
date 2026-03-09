@@ -426,10 +426,6 @@ function MobileNav() {
             Boutique
           </Link>
 
-          <Link href="/payments" onClick={close} className="px-3 py-2.5 text-sm font-medium text-[#0F172A] hover:text-[#17a2b8] hover:bg-[#F8FAFC] rounded-xl transition-colors">
-            Payment Plans
-          </Link>
-
           <Link href="/#contact" onClick={close} className="px-3 py-2.5 text-sm font-medium text-[#64748B] hover:text-[#17a2b8] hover:bg-[#F8FAFC] rounded-xl transition-colors">
             Contact
           </Link>

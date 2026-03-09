@@ -8,15 +8,18 @@ export interface BookedSlot {
 }
 
 /** Returns all non-cancelled bookings for a given date (YYYY-MM-DD). */
-export async function getBookedSlots(date: string): Promise<BookedSlot[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.rpc("get_booked_slots", {
-    p_date: date,
-  });
-
-  if (error) throw new Error(error.message);
-  return (data as BookedSlot[]) ?? [];
+export async function getBookedSlots(date: string): Promise<{ data: BookedSlot[]; error: string | null }> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("get_booked_slots", {
+      p_date: date,
+    });
+    if (error) return { data: [], error: error.message };
+    return { data: (data as BookedSlot[]) ?? [], error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to load availability";
+    return { data: [], error: message };
+  }
 }
 
 export interface CreateBookingInput {

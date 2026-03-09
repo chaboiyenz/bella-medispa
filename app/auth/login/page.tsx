@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,7 +8,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signIn } from "@/lib/actions/auth";
 
-export default function LoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams();
   const next    = searchParams.get("next")    ?? "/";
   const message = searchParams.get("message") ?? "";
@@ -116,5 +116,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen mesh-bg flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#17a2b8]" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

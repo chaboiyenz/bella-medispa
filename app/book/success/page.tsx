@@ -3,33 +3,38 @@ import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle, Calendar, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { stripe } from "@/lib/stripe";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Booking Confirmed",
+  title: "Booking Request Confirmed",
 };
 
 export default async function BookSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ booking_id?: string }>;
 }) {
-  const { session_id } = await searchParams;
+  const { booking_id } = await searchParams;
 
-  // Optionally retrieve session details to show richer confirmation
   let serviceName = "";
-  let amountPaid  = "";
-
-  if (session_id) {
+  if (booking_id) {
     try {
-      const session = await stripe.checkout.sessions.retrieve(session_id, {
-        expand: ["line_items"],
-      });
-      serviceName = session.line_items?.data[0]?.description ?? "";
-      const cents = session.amount_total ?? 0;
-      amountPaid  = `$${(cents / 100).toFixed(2)}`;
+      const supabase = await createClient();
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("service_id")
+        .eq("id", booking_id)
+        .single();
+      if (booking?.service_id) {
+        const { data: service } = await supabase
+          .from("services")
+          .select("name")
+          .eq("id", booking.service_id)
+          .single();
+        serviceName = service?.name ?? "";
+      }
     } catch {
-      // Non-critical — page still renders without it
+      // Non-critical — page still renders
     }
   }
 
@@ -53,34 +58,20 @@ export default async function BookSuccessPage({
               You&apos;re Confirmed!
             </h1>
             <p className="text-sm text-[#64748B] mt-2 leading-relaxed">
-              Your appointment has been confirmed and payment received.
-              A receipt has been sent to your email.
+              Your booking request has been received. Our team will confirm your appointment and reach out if needed.
             </p>
           </div>
 
           {/* Details strip */}
-          {(serviceName || amountPaid) && (
+          {serviceName && (
             <div className="w-full bg-[#F8FAFC] border border-[#F1F5F9] rounded-2xl p-5 flex flex-col gap-3 text-left">
-              {serviceName && (
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-4 h-4 text-[#17a2b8] shrink-0" />
-                  <div>
-                    <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide">Treatment</p>
-                    <p className="text-sm font-medium text-[#0F172A]">{serviceName}</p>
-                  </div>
+              <div className="flex items-center gap-3">
+                <Calendar className="w-4 h-4 text-[#17a2b8] shrink-0" />
+                <div>
+                  <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide">Treatment</p>
+                  <p className="text-sm font-medium text-[#0F172A]">{serviceName}</p>
                 </div>
-              )}
-              {amountPaid && (
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 flex items-center justify-center shrink-0">
-                    <span className="text-[#17a2b8] font-bold text-sm">$</span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide">Paid</p>
-                    <p className="text-sm font-medium text-[#0F172A]">{amountPaid}</p>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
 
@@ -90,7 +81,7 @@ export default async function BookSuccessPage({
               What happens next?
             </p>
             <ul className="text-sm text-[#64748B] space-y-1.5">
-              <li>• Our team will send a reminder 24 hrs before your visit.</li>
+              <li>• Our team will confirm your appointment and send a reminder before your visit.</li>
               <li>• Arrive 10 minutes early for your consultation.</li>
               <li>• Questions? Call <a href="tel:+13027366334" className="text-[#17a2b8] font-medium">+1 302-736-6334</a></li>
             </ul>

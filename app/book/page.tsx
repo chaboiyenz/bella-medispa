@@ -15,12 +15,7 @@ export default async function BookPage({
 }) {
   const { service: serviceId } = await searchParams;
 
-  let services: Awaited<ReturnType<typeof getActiveServices>> = [];
-  try {
-    services = await getActiveServices();
-  } catch {
-    // Supabase not yet configured — wizard will render with empty list
-  }
+  const { data: services = [], error: servicesError } = await getActiveServices();
 
   return (
     <div className="min-h-screen mesh-bg text-[#0F172A] pt-16">
@@ -42,6 +37,11 @@ export default async function BookPage({
           </p>
         </div>
 
+        {servicesError && (
+          <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-center">
+            {servicesError}
+          </p>
+        )}
         <BookingWizard services={services} initialServiceId={serviceId} />
 
         {/* Trust bar */}

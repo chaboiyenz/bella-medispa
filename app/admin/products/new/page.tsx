@@ -2,7 +2,7 @@
 
 import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient } from "@/lib/supabase/client";
 import { createProduct } from "@/lib/actions/admin";
 import { Upload, X, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -62,10 +62,7 @@ export default function NewProductPage() {
     let image_url: string | null = null;
 
     if (imageFile) {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = createClient();
       const ext  = imageFile.name.split(".").pop();
       const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 

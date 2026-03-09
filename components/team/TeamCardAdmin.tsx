@@ -35,8 +35,8 @@ export function TeamCardAdmin({ member }: { member: TeamMember }) {
 
   return (
     <>
-      {/* Hover overlay — only visible when parent has group/admin hover */}
-      <div className="absolute top-3 right-3 z-20 flex gap-1.5 opacity-0 group-hover/admin:opacity-100 transition-opacity duration-150">
+      {/* Hover overlay — only visible when parent has group/admin hover; suppressHydrationWarning for extension-injected attributes */}
+      <div className="absolute top-3 right-3 z-20 flex gap-1.5 opacity-0 group-hover/admin:opacity-100 transition-opacity duration-150" suppressHydrationWarning>
         <button
           onClick={() => setEditOpen(true)}
           title="Edit specialist"

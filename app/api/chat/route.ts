@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/types";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -58,10 +57,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ type: "handoff", answer: null } satisfies ChatResponse);
     }
 
-    const supabase = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const supabase = await createClient();
 
     const { data: faqs } = await supabase
       .from("faqs")
@@ -98,8 +94,7 @@ export async function POST(req: NextRequest) {
     }
 
     return Response.json({ type: "handoff", answer: null } satisfies ChatResponse);
-  } catch (err) {
-    console.error("Chat API error:", err);
+  } catch {
     return Response.json({ type: "handoff", answer: null } satisfies ChatResponse, { status: 500 });
   }
 }

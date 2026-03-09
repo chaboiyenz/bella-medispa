@@ -1,8 +1,13 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { Footer } from "@/components/Footer";
-import { ChatBubble } from "@/components/ChatBubble";
+
+const ChatbotWidget = dynamic(
+  () => import("@/components/chatbot/ChatbotWidget").then((m) => ({ default: m.ChatbotWidget })),
+  { ssr: false }
+);
 
 export function GlobalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -12,7 +17,7 @@ export function GlobalShell({ children }: { children: React.ReactNode }) {
     <>
       {children}
       {!isAdminPage && <Footer />}
-      {!isAdminPage && <ChatBubble />}
+      {!isAdminPage && <ChatbotWidget />}
     </>
   );
 }
