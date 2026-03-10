@@ -179,6 +179,7 @@ export function ProductCard({
   }
 
   const categoryLabel = (product.category ?? "GENERAL").toUpperCase().replace(/\s+/g, " / ");
+  const catalogTag = `CATALOG ${String(index + 1).padStart(3, "0")} / ${categoryLabel}`;
 
   return (
     <>
@@ -191,7 +192,7 @@ export function ProductCard({
         {/* Cyan (#17a2b8) category tag */}
         <div className="px-6 pt-5 pb-3" suppressHydrationWarning>
           <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-[#17a2b8]">
-            {categoryLabel}
+            {catalogTag}
           </span>
         </div>
 
@@ -204,6 +205,7 @@ export function ProductCard({
               fill
               className="object-cover group-hover:scale-[1.03] transition-transform duration-700"
               sizes="(max-width: 640px) 100vw, 50vw"
+              suppressHydrationWarning
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-slate-50" suppressHydrationWarning>

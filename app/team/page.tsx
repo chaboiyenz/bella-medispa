@@ -142,7 +142,13 @@ function TeamCard({ member, index }: { member: TeamMember; index: number }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function TeamPage() {
-  const { members, error } = await getTeamMembers();
+  let members: TeamMember[] = [];
+  let error: string | null = null;
+  try {
+    ({ members, error } = await getTeamMembers());
+  } catch {
+    error = "Clinical Note: Provider roster connection interrupted — please refresh to reload.";
+  }
 
   return (
     <main className="min-h-screen bg-white" suppressHydrationWarning>

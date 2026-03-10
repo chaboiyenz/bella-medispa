@@ -11,7 +11,13 @@ export const metadata: Metadata = {
 };
 
 export default async function ShopPage() {
-  const { products, error } = await getActiveProducts();
+  let products: Product[] = [];
+  let error: string | null = null;
+  try {
+    ({ products, error } = await getActiveProducts());
+  } catch {
+    error = "Clinical Note: Archive connection interrupted — please refresh to reload the collection.";
+  }
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#0F172A] pt-16" suppressHydrationWarning>
@@ -51,7 +57,7 @@ export default async function ShopPage() {
         ) : products.length === 0 ? (
           <div className="py-24 border border-dashed border-slate-200 text-center" suppressHydrationWarning>
             <p className="text-[9px] tracking-[0.4em] font-bold text-[#CBD5E1] uppercase">
-              Collection in Preparation
+              Curating Collection&hellip;
             </p>
           </div>
         ) : (

@@ -50,7 +50,7 @@ export type Product = {
   name: string;
   description: string | null;
   price: number;
-  stripe_price_id: string | null;
+  stripe_price_id?: string | null;
   image_url: string | null;
   stock: number;
   category: string | null;

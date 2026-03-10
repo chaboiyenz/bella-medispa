@@ -50,7 +50,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
 
           {/* Left: Typography */}
-          <div className="flex flex-col gap-7">
+          <div className="flex flex-col gap-7" suppressHydrationWarning>
             <div className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.25em] uppercase text-[#17a2b8]">
               <span className="w-6 h-px bg-[#17a2b8]" />
               Premium Aesthetics · Est. 2024
@@ -81,7 +81,7 @@ export default function HomePage() {
             </div>
 
             {/* Stats */}
-            <div className="flex gap-10 pt-4 border-t border-[#F1F5F9]">
+            <div className="flex gap-10 pt-4 border-t border-[#F1F5F9]" suppressHydrationWarning>
               {[
                 { value: "2,000+", label: "Clients Treated" },
                 { value: "15+", label: "Treatments" },

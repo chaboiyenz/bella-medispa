@@ -115,11 +115,11 @@ export function ContactSection() {
   }
 
   return (
-    <section id="contact" className="py-24 px-6">
-      <div className="max-w-7xl mx-auto">
+    <section id="contact" className="py-24 px-6" suppressHydrationWarning>
+      <div className="max-w-7xl mx-auto" suppressHydrationWarning>
 
         {/* Section header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16" suppressHydrationWarning>
           <div className="inline-flex items-center justify-center gap-2 text-xs font-bold tracking-[0.25em] uppercase text-[#17a2b8]">
             <span className="w-6 h-px bg-[#17a2b8]" />
             Get In Touch
@@ -130,10 +130,10 @@ export function ContactSection() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10" suppressHydrationWarning>
 
           {/* ── Left: Info ── */}
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-8" suppressHydrationWarning>
             <p className="text-base text-[#64748B] leading-relaxed max-w-md">
               Have a question about a treatment, want to book a free consultation,
               or just want to say hello? We&apos;d love to hear from you. Our team
